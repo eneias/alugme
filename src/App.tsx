@@ -22,6 +22,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import MyProperties from "./pages/landlord/MyProperties";
 import BankAccount from "./pages/landlord/BankAccount";
 import LandlordSetup from "./pages/landlord/LandlordSetup";
+import RentalHistory from "./pages/landlord/RentalHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
           <Route path="/landlord/setup" element={<LandlordSetup />} />
           <Route path="/landlord/bank-account" element={<BankAccount />} />
           <Route path="/landlord/properties" element={<MyProperties />} />
+          <Route path="/landlord/rental-history" element={<RentalHistory />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
