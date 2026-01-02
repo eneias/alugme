@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Building2, Users, ArrowLeft } from 'lucide-react';
+import { Home, Building2, Users, ArrowLeft, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logo from '@/assets/logo2.png';
 
 const menuItems = [
   { path: '/admin', icon: Home, label: 'Dashboard' },
+  { path: '/admin/banners', icon: Image, label: 'Banners' },
   { path: '/admin/properties', icon: Building2, label: 'Imóveis' },
   { path: '/admin/users', icon: Users, label: 'Usuários' },
 ];

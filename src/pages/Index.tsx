@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BannerCarousel from "@/components/BannerCarousel";
 import PropertyCard from "@/components/PropertyCard";
 import FilterBar from "@/components/FilterBar";
 import { properties } from "@/data/properties";
@@ -49,26 +50,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 gradient-hero opacity-5" />
-        <div className="container relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto"
-          >
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-              Encontre seu novo{" "}
-              <span className="text-gradient">lar</span>
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              Descubra casas e apartamentos incríveis para alugar nas melhores localizações do Brasil
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      {/* Banner Carousel */}
+      <BannerCarousel />
 
       {/* Properties Section */}
       <section className="py-12 px-4">
