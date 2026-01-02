@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +11,14 @@ import logo from "@/assets/logo2.png";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Pegar URL de redirecionamento se existir
+  const redirectTo = (location.state as { redirectTo?: string })?.redirectTo;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +49,10 @@ const Login = () => {
         description: `Bem-vindo(a), ${user.name}!`,
       });
 
-      // Redirecionar baseado no tipo de usuário
-      if (user.type === "locador") {
+      // Redirecionar: priorizar redirectTo, senão baseado no tipo de usuário
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else if (user.type === "locador") {
         navigate("/admin");
       } else {
         navigate("/");

@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, FileText, Check, Download, Printer } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { properties } from "@/data/properties";
+import { users } from "@/data/users";
+import { useToast } from "@/hooks/use-toast";
 
 interface ContractFormData {
   fullName: string;
@@ -27,8 +29,30 @@ const RentalContract = () => {
   const [step, setStep] = useState<"form" | "contract">("form");
   const [contractData, setContractData] = useState<ContractFormData | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ContractFormData>();
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ContractFormData>();
+
+  // Verificar se usuário está logado e preencher dados
+  useEffect(() => {
+    const loggedUserId = localStorage.getItem("loggedUserId");
+    if (!loggedUserId) {
+      toast({
+        title: "Faça login para continuar",
+        description: "Você precisa estar logado para alugar um imóvel.",
+        variant: "destructive",
+      });
+      navigate("/login", { state: { redirectTo: `/rent/${id}` } });
+      return;
+    }
+
+    const user = users.find(u => u.id === loggedUserId);
+    if (user) {
+      setValue("fullName", user.name);
+      setValue("email", user.email);
+      setValue("phone", user.phone);
+    }
+  }, [navigate, id, setValue, toast]);
 
   const property = properties.find((p) => p.id === id);
 
