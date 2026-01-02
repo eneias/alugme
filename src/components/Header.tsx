@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { Home, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 import UserMenu from "./UserMenu";
+import logo from "@/assets/logo1.png";
 
 const Header = () => {
   return (
@@ -12,13 +13,8 @@ const Header = () => {
       className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     >
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-hero shadow-card group-hover:shadow-card-hover transition-shadow duration-300">
-            <Home className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-display text-xl font-semibold text-foreground">
-            Casa<span className="text-primary">Fácil</span>
-          </span>
+        <Link to="/" className="flex items-center group">
+          <img src={logo} alt="AlugMe" className="h-10 object-contain" />
         </Link>
 
         <nav className="flex items-center gap-4">

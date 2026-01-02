@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/data/users";
-import { Home, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
+import logo from "@/assets/logo2.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -65,9 +66,8 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-primary hover:opacity-80 transition-opacity">
-            <Home className="h-8 w-8" />
-            <span>ImóveisApp</span>
+          <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
+            <img src={logo} alt="AlugMe" className="h-20 object-contain mx-auto" />
           </Link>
         </div>
 

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Building2, Users, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logo from '@/assets/logo2.png';
 
 const menuItems = [
   { path: '/admin', icon: Home, label: 'Dashboard' },
@@ -14,8 +15,10 @@ const AdminSidebar = () => {
   return (
     <aside className="w-64 bg-card border-r border-border min-h-screen p-4">
       <div className="mb-8">
-        <h1 className="text-xl font-bold text-primary">Admin Panel</h1>
-        <p className="text-sm text-muted-foreground">Gestão de Imóveis</p>
+        <Link to="/admin">
+          <img src={logo} alt="AlugMe" className="h-16 object-contain" />
+        </Link>
+        <p className="text-sm text-muted-foreground mt-2">Painel Administrativo</p>
       </div>
 
       <nav className="space-y-2">
