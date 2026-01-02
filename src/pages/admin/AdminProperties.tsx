@@ -1,9 +1,16 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,6 +32,12 @@ const AdminProperties = () => {
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterNeighborhood, setFilterNeighborhood] = useState<string>('all');
+  const [filterBedrooms, setFilterBedrooms] = useState<string>('all');
+
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -36,6 +49,27 @@ const AdminProperties = () => {
     description: '',
     mainImage: '',
   });
+
+  // Lista de bairros únicos
+  const neighborhoods = useMemo(() => {
+    const uniqueNeighborhoods = [...new Set(properties.map((p) => p.neighborhood))];
+    return uniqueNeighborhoods.sort();
+  }, [properties]);
+
+  // Filtrar imóveis
+  const filteredProperties = useMemo(() => {
+    return properties.filter((property) => {
+      const matchesSearch =
+        property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.neighborhood.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesNeighborhood =
+        filterNeighborhood === 'all' || property.neighborhood === filterNeighborhood;
+      const matchesBedrooms =
+        filterBedrooms === 'all' || property.bedrooms === Number(filterBedrooms);
+      return matchesSearch && matchesNeighborhood && matchesBedrooms;
+    });
+  }, [properties, searchTerm, filterNeighborhood, filterBedrooms]);
 
   const resetForm = () => {
     setFormData({
@@ -121,6 +155,53 @@ const AdminProperties = () => {
         </Button>
       </div>
 
+      {/* Filtros */}
+      <div className="bg-card rounded-lg border border-border p-4 mb-4">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, endereço ou bairro..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <Select value={filterNeighborhood} onValueChange={setFilterNeighborhood}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Bairro" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os bairros</SelectItem>
+              {neighborhoods.map((neighborhood) => (
+                <SelectItem key={neighborhood} value={neighborhood}>
+                  {neighborhood}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterBedrooms} onValueChange={setFilterBedrooms}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Quartos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os quartos</SelectItem>
+              <SelectItem value="1">1 quarto</SelectItem>
+              <SelectItem value="2">2 quartos</SelectItem>
+              <SelectItem value="3">3 quartos</SelectItem>
+              <SelectItem value="4">4+ quartos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(searchTerm || filterNeighborhood !== 'all' || filterBedrooms !== 'all') && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            {filteredProperties.length} imóvel(is) encontrado(s)
+          </div>
+        )}
+      </div>
+
       <div className="bg-card rounded-lg border border-border">
         <Table>
           <TableHeader>
@@ -135,7 +216,7 @@ const AdminProperties = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {properties.map((property) => (
+            {filteredProperties.map((property) => (
               <TableRow key={property.id}>
                 <TableCell>
                   <img

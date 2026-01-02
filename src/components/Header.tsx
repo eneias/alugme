@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Home, Search } from "lucide-react";
 import { motion } from "framer-motion";
+import UserMenu from "./UserMenu";
 
 const Header = () => {
   return (
@@ -20,7 +21,7 @@ const Header = () => {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-4">
           <Link 
             to="/" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -31,6 +32,7 @@ const Header = () => {
             <Search className="h-4 w-4" />
             Buscar
           </button>
+          <UserMenu />
         </nav>
       </div>
     </motion.header>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Pencil, Trash2, Check, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,12 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -41,6 +47,22 @@ const AdminUsers = () => {
     status: true,
     password: '',
   });
+
+  // Filtrar usuários
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.phone.includes(searchTerm);
+      const matchesType = filterType === 'all' || user.type === filterType;
+      const matchesStatus =
+        filterStatus === 'all' ||
+        (filterStatus === 'active' && user.status) ||
+        (filterStatus === 'inactive' && !user.status);
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [users, searchTerm, filterType, filterStatus]);
 
   const resetForm = () => {
     setFormData({
@@ -120,6 +142,48 @@ const AdminUsers = () => {
         </Button>
       </div>
 
+      {/* Filtros */}
+      <div className="bg-card rounded-lg border border-border p-4 mb-4">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, email ou telefone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="locador">Locador</SelectItem>
+              <SelectItem value="locatario">Locatário</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="inactive">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(searchTerm || filterType !== 'all' || filterStatus !== 'all') && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            {filteredUsers.length} usuário(s) encontrado(s)
+          </div>
+        )}
+      </div>
+
       <div className="bg-card rounded-lg border border-border">
         <Table>
           <TableHeader>
@@ -136,7 +200,7 @@ const AdminUsers = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
                   <img

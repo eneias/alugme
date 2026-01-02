@@ -8,6 +8,8 @@ import PropertyDetails from "./pages/PropertyDetails";
 import RentalContract from "./pages/RentalContract";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProperties from "./pages/admin/AdminProperties";
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/rent/:id" element={<RentalContract />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/edit" element={<ProfileEdit />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
