@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import FilterBar from "@/components/FilterBar";
 import { properties } from "@/data/properties";
@@ -111,12 +112,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-8 mt-12">
-        <div className="container text-center text-muted-foreground text-sm">
-          <p>© 2024 CasaFácil. Todos os direitos reservados.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
