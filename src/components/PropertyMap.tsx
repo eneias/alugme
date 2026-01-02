@@ -11,16 +11,16 @@ interface PropertyMapProps {
   name: string;
 }
 
+const MAPBOX_TOKEN = "pk.eyJ1IjoiZW5laWFzIiwiYSI6ImNpb211OGQ5NTAwNHV1aGx5bWlsNDMwdjUifQ.vvPqeh27QdR8fEcUfgePiA";
+
 const PropertyMap = ({ lat, lng, name }: PropertyMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState("");
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  const initializeMap = () => {
-    if (!mapContainer.current || !mapboxToken) return;
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = mapboxToken;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
     try {
       map.current = new mapboxgl.Map({
@@ -51,57 +51,15 @@ const PropertyMap = ({ lat, lng, name }: PropertyMapProps) => {
           )
         )
         .addTo(map.current);
-
-      setIsMapLoaded(true);
     } catch (error) {
       console.error("Error initializing map:", error);
     }
-  };
 
-  useEffect(() => {
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, []);
-
-  if (!isMapLoaded) {
-    return (
-      <div className="rounded-2xl overflow-hidden border border-border bg-card p-6">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <MapPin className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-display text-lg font-semibold mb-2">Configure o Mapa</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Para visualizar o mapa, insira seu token público do Mapbox.
-              <br />
-              <a 
-                href="https://mapbox.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Obtenha um token gratuito aqui
-              </a>
-            </p>
-          </div>
-          <div className="flex gap-2 w-full max-w-md">
-            <Input
-              type="text"
-              placeholder="pk.eyJ1Ijoi..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={initializeMap} disabled={!mapboxToken}>
-              Carregar
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [lat, lng, name]);
 
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-card">
