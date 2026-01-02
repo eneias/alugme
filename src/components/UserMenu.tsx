@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, Building2, CreditCard } from 'lucide-react';
+import { User, LogOut, Settings, Building2, CreditCard, History, FileText } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -79,6 +79,14 @@ const UserMenu = () => {
             <DropdownMenuItem onClick={() => navigate('/landlord/bank-account')}>
               <CreditCard className="mr-2 h-4 w-4" />
               Contas Bancárias
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/landlord/rental-history')}>
+              <History className="mr-2 h-4 w-4" />
+              Histórico de Locações
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/landlord/setup')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Contrato Social
             </DropdownMenuItem>
           </>
         )}
