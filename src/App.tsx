@@ -19,6 +19,9 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminProperties from "./pages/admin/AdminProperties";
 import AdminUsers from "./pages/admin/AdminUsers";
+import MyProperties from "./pages/landlord/MyProperties";
+import BankAccount from "./pages/landlord/BankAccount";
+import LandlordSetup from "./pages/landlord/LandlordSetup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +44,11 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          
+          {/* Landlord Routes */}
+          <Route path="/landlord/setup" element={<LandlordSetup />} />
+          <Route path="/landlord/bank-account" element={<BankAccount />} />
+          <Route path="/landlord/properties" element={<MyProperties />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>

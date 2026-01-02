@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings, Building2, CreditCard } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import { users } from '@/data/users';
 import { toast } from 'sonner';
 
@@ -51,7 +52,12 @@ const UserMenu = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-2">
-          <p className="font-medium">{user.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{user.name}</p>
+            {user.type === 'locador' && (
+              <Badge variant="secondary" className="text-xs">Locador</Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
@@ -63,6 +69,19 @@ const UserMenu = () => {
           <Settings className="mr-2 h-4 w-4" />
           Editar Perfil
         </DropdownMenuItem>
+        {user.type === 'locador' && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/landlord/properties')}>
+              <Building2 className="mr-2 h-4 w-4" />
+              Meus Imóveis
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/landlord/bank-account')}>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Contas Bancárias
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
