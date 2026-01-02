@@ -37,8 +37,8 @@ const Login = () => {
         return;
       }
 
-      // Salvar usuário no localStorage (mock session)
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      // Salvar sessão fake no localStorage
+      localStorage.setItem("loggedUserId", user.id);
       
       toast({
         title: "Login realizado com sucesso!",
