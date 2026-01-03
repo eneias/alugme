@@ -69,7 +69,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 flex items-center justify-center p-4 bg-login">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
@@ -112,8 +112,9 @@ const Login = () => {
               <div className="bg-muted/50 p-3 rounded-lg text-sm">
                 <p className="font-medium mb-2">Usuários de teste:</p>
                 <div className="space-y-1 text-muted-foreground">
-                  <p><strong>Locador:</strong> joao@email.com / 123456</p>
+                  <p><strong>Locador:</strong> carlos@email.com / 123456</p>
                   <p><strong>Locatário:</strong> ana@email.com / 123456</p>
+                  <p><strong>Locador:</strong> joao@email.com / 123456</p>
                 </div>
               </div>
             </CardContent>
@@ -131,6 +132,11 @@ const Login = () => {
                   </span>
                 )}
               </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                <Link to="/register" className="text-primary hover:underline font-medium">
+                  Esqueci minha senha
+                </Link>
+              </p>
               <p className="text-sm text-muted-foreground text-center">
                 Não tem uma conta?{" "}
                 <Link to="/register" className="text-primary hover:underline font-medium">

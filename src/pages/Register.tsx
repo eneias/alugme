@@ -40,7 +40,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-login">
       <Header />
 
       <main className="container mx-auto px-4 py-12">
@@ -187,7 +187,7 @@ const Register = () => {
 
             <p className="text-center text-sm text-muted-foreground mt-6">
               Já tem uma conta?{' '}
-              <Link to="/" className="text-primary font-medium hover:underline">
+              <Link to="/login" className="text-primary font-medium hover:underline">
                 Faça login
               </Link>
             </p>

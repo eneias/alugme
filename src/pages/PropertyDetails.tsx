@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { properties } from "@/data/properties";
 import { users } from "@/data/users";
 import { useToast } from "@/hooks/use-toast";
+import Footer from "@/components/Footer";
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -304,11 +305,7 @@ const PropertyDetails = () => {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 mt-12">
-        <div className="container text-center text-muted-foreground text-sm">
-          <p>© 2024 CasaFácil. Todos os direitos reservados.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

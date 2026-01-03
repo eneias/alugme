@@ -147,6 +147,13 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  .bg-login {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0.7)), url('../../public/background2.png') !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+  }
 }
 
 @layer utilities {
