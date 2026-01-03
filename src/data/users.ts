@@ -15,6 +15,18 @@ export interface User {
 
 export const users: User[] = [
   {
+    id: '24',
+    name: 'Eneias Slva',
+    email: 'eneias@email.com',
+    phone: '(48) 99997-1197',
+    photo: 'https://lh3.googleusercontent.com/ogw/AF2bZyicfIVGpTlNWKdXFZtHfmJSrVY0F4wWv9SnXFfPNvVRn1QM=s64-c-mo',
+    type: 'admin',
+    status: true,
+    password: '123456',
+    createdAt: '2024-01-15',
+    lastAccess: '2024-12-28',
+  },
+  {
     id: '1',
     name: 'Carlos Silva',
     email: 'carlos@email.com',
@@ -57,7 +69,7 @@ export const users: User[] = [
     phone: '(11) 99999-4444',
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
     type: 'locatario',
-    status: true,
+    status: false,
     password: '123456',
     createdAt: '2024-04-05',
     lastAccess: '2024-12-26',

@@ -53,6 +53,8 @@ const Login = () => {
       if (redirectTo) {
         navigate(redirectTo);
       } else if (user.type === "locador") {
+        navigate("/landlord");
+      } else if (user.type === "admin") {
         navigate("/admin");
       } else {
         navigate("/");
@@ -112,9 +114,11 @@ const Login = () => {
               <div className="bg-muted/50 p-3 rounded-lg text-sm">
                 <p className="font-medium mb-2">Usuários de teste:</p>
                 <div className="space-y-1 text-muted-foreground">
-                  <p><strong>Locador:</strong> carlos@email.com / 123456</p>
-                  <p><strong>Locatário:</strong> ana@email.com / 123456</p>
-                  <p><strong>Locador:</strong> joao@email.com / 123456</p>
+                  <p><strong>Admin:</strong> eneias@email.com / 123456</p>
+                  <p><strong>Locador ativo:</strong> carlos@email.com / 123456</p>
+                  <p><strong>Locatário atvo:</strong> maria@email.com / 123456</p>
+                  <p><strong>Locador inativo:</strong> joao@email.com / 123456</p>
+                  <p><strong>Locatário inativo:</strong> ana@email.com / 123456</p>
                 </div>
               </div>
             </CardContent>

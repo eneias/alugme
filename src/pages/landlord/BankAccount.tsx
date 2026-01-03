@@ -175,13 +175,12 @@ const BankAccountPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      
-      <main className="flex-1 container py-8">
+
+      <main className="flex-1 container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-3xl mx-auto space-y-8"
+          className=" mx-auto space-y-8"
         >
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -308,8 +307,6 @@ const BankAccountPage = () => {
           </div>
         </motion.div>
       </main>
-
-      <Footer />
 
       {/* Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

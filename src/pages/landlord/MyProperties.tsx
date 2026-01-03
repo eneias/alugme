@@ -100,7 +100,7 @@ const MyProperties = () => {
         description: 'Complete seu cadastro de locador para continuar.',
         variant: 'destructive',
       });
-      navigate('/landlord/setup');
+      navigate('/landlord');
       return;
     }
 
@@ -279,10 +279,8 @@ const MyProperties = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      
-      <main className="flex-1 container py-8">
+    <div className="min-h-screen bg-background flex flex-col">    
+      <main className="flex-1 container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -463,8 +461,6 @@ const MyProperties = () => {
           </div>
         </motion.div>
       </main>
-
-      <Footer />
 
       {/* Property Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -9,20 +9,49 @@ interface PropertyMapProps {
   lat: number;
   lng: number;
   name: string;
+  address: string;
 }
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoiZW5laWFzIiwiYSI6ImNpb211OGQ5NTAwNHV1aGx5bWlsNDMwdjUifQ.vvPqeh27QdR8fEcUfgePiA";
 
-const PropertyMap = ({ lat, lng, name }: PropertyMapProps) => {
+const PropertyMap = ({ lat, lng, name, address }: PropertyMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+  async function geocodeAddress(address) {
 
+    const response = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+        address
+      )}.json?access_token=${MAPBOX_TOKEN}`
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+    console.log(data.features[0].center);
+
+    if (!data.features.length) {
+      throw new Error("Endereço não encontrado");
+    }
+
+    return data.features[0].center; // [lng, lat]
+  }
+
+useEffect(() => {
+  if (!mapContainer.current || map.current) return;
+
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+
+  let isMounted = true;
+
+  async function initMap() {
     try {
+      const [lng, lat] = await geocodeAddress(address);
+
+      if (!isMounted) return;
+
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
@@ -30,9 +59,12 @@ const PropertyMap = ({ lat, lng, name }: PropertyMapProps) => {
         zoom: 15,
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      map.current.addControl(
+        new mapboxgl.NavigationControl(),
+        "top-right"
+      );
 
-      // Add marker
+      // Marker customizado
       const markerEl = document.createElement("div");
       markerEl.className = "custom-marker";
       markerEl.innerHTML = `
@@ -54,12 +86,16 @@ const PropertyMap = ({ lat, lng, name }: PropertyMapProps) => {
     } catch (error) {
       console.error("Error initializing map:", error);
     }
+  }
 
-    return () => {
-      map.current?.remove();
-      map.current = null;
-    };
-  }, [lat, lng, name]);
+  initMap();
+
+  return () => {
+    isMounted = false;
+    map.current?.remove();
+    map.current = null;
+  };
+}, [address, name]);
 
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-card">

@@ -65,15 +65,9 @@ const RentalHistory = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          
+      <main className="flex-1 container">
+        <div className="mb-6">    
           <h1 className="text-3xl font-bold">Histórico de Locações</h1>
           <p className="text-muted-foreground mt-1">
             Veja todos os imóveis que foram locados e seus respectivos contratos
@@ -251,8 +245,7 @@ const RentalHistory = () => {
           </DialogContent>
         </Dialog>
       </main>
-
-      <Footer />
+      
     </div>
   );
 };

@@ -63,9 +63,8 @@ const LandlordSetup = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
       
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -208,7 +207,6 @@ const LandlordSetup = () => {
         </motion.div>
       </main>
 
-      <Footer />
     </div>
   );
 };

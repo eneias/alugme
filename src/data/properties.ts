@@ -24,9 +24,9 @@ export const properties: Property[] = [
   {
     id: "1",
     name: "Casa Vista Mar",
-    address: "Rua das Palmeiras, 120",
-    neighborhood: "Copacabana",
-    city: "Rio de Janeiro",
+    address: "Servidão Servulo Chagas, 239",
+    neighborhood: "Campeche",
+    city: "Florianópolis - SC, 88063-560",
     price: 4500,
     bedrooms: 3,
     bathrooms: 2,

@@ -249,6 +249,11 @@ const PropertyDetails = () => {
                 lat={property.coordinates.lat} 
                 lng={property.coordinates.lng} 
                 name={property.name}
+                address={[
+                    property.address,
+                    property.neighborhood,
+                    property.city,
+                  ].filter(Boolean).join(" - ")}
               />
             </div>
           </motion.div>

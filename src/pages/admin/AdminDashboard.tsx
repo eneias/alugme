@@ -101,12 +101,14 @@ const AdminDashboard = () => {
                   </div>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      user.type === 'locador'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-blue-100 text-blue-700'
+                      user.type === 'admin'
+                        ? 'bg-gray-600 text-gray-100'
+                        : user.type === 'locador' ?
+                          'bg-purple-100 text-purple-700'
+                          : 'bg-blue-100 text-blue-700'
                     }`}
                   >
-                    {user.type === 'locador' ? 'Locador' : 'Locatário'}
+                    {user.type === 'admin' ? 'Admin' : user.type === 'locador' ? 'Locador' : 'Locatário'}
                   </span>
                 </div>
               ))}
