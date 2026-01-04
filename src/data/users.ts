@@ -1,4 +1,4 @@
-export type UserType = 'locador' | 'locatario';
+export type UserType = 'admin' | 'locador' | 'locatario';
 
 export interface User {
   id: string;

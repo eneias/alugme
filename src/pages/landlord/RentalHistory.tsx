@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Calendar, User, Home, Eye } from 'lucide-react';
+import { FileText, Calendar, User, Home, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { rentalContracts, landlordProperties } from '@/data/landlords';
+
+import { rentalContracts, landlordProperties, landlords } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
 
@@ -21,10 +20,12 @@ const RentalHistory = () => {
 
   // Mock: pegar contratos do locador logado
   const loggedUserId = localStorage.getItem('loggedUserId');
+
+  const landlord = landlords.find(l => l.userId === loggedUserId);
   
   // Pegar propriedades do locador
   const myPropertyIds = landlordProperties
-    .filter(lp => lp.landlordId === loggedUserId)
+    .filter(lp => lp.landlordId === landlord?.id)
     .map(lp => lp.id);
 
   // Pegar contratos dessas propriedades
