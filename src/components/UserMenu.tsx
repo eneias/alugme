@@ -17,6 +17,8 @@ const UserMenu = () => {
   
   // Verifica se há usuário logado
   const loggedUserId = localStorage.getItem('loggedUserId');
+  const loggedUserType = localStorage.getItem('loggedUserType');
+  const profileRoute = loggedUserType === 'locador' ? '/landlord/profile' : '/profile';
   const user = loggedUserId ? users.find(u => u.id === loggedUserId) : null;
 
   const handleLogout = () => {
@@ -61,32 +63,43 @@ const UserMenu = () => {
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/profile')}>
+        <DropdownMenuItem onClick={() => navigate(profileRoute)}>
           <User className="mr-2 h-4 w-4" />
           Meu Perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/profile/edit')}>
+        <DropdownMenuItem onClick={() => navigate(profileRoute+'/edit')}>
           <Settings className="mr-2 h-4 w-4" />
           Editar Perfil
         </DropdownMenuItem>
         {user.type === 'locador' && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/landlord/properties')}>
-              <Building2 className="mr-2 h-4 w-4" />
-              Meus Imóveis
+
+            <DropdownMenuItem onClick={() => navigate('/landlord')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Contrato Padão
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/landlord/bank-account')}>
               <CreditCard className="mr-2 h-4 w-4" />
               Contas Bancárias
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/landlord/properties')}>
+              <Building2 className="mr-2 h-4 w-4" />
+              Meus Imóveis
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/landlord/rental-history')}>
               <History className="mr-2 h-4 w-4" />
               Histórico de Locações
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/landlord/setup')}>
-              <FileText className="mr-2 h-4 w-4" />
-              Contrato Social
+          </>
+        )}
+        {user.type === 'locatario' && (
+          <>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onClick={() => navigate('/rental-history')}>
+              <History className="mr-2 h-4 w-4" />
+              Locações
             </DropdownMenuItem>
           </>
         )}

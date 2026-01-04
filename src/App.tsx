@@ -25,6 +25,7 @@ import BankAccount from "./pages/landlord/BankAccount";
 import LandlordSetup from "./pages/landlord/LandlordSetup";
 import RentalHistory from "./pages/landlord/RentalHistory";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from '@/routes/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
@@ -40,27 +41,41 @@ const App = () => (
           <Route path="/rent/:id" element={<RentalContract />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/edit" element={<ProfileEdit />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
-          
-          {/* Landlord Routes */}
-          <Route path="/landlord" element={<LandlordLayout />}>
-            <Route index element={<LandlordSetup />} />
-            <Route path="/landlord/bank-account" element={<BankAccount />} />
-            <Route path="/landlord/properties" element={<MyProperties />} />
-            <Route path="/landlord/rental-history" element={<RentalHistory />} />
+
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'locador', 'locatario']} />}>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
           </Route>
           
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="banners" element={<AdminBanners />} />
-            <Route path="properties" element={<AdminProperties />} />
-            <Route path="users" element={<AdminUsers />} />
+          {/* Landlord Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['locador']} />}>
+            <Route path="/landlord" element={<LandlordLayout />}>
+              <Route index element={<LandlordSetup />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="profile/edit" element={<ProfileEdit />} />
+              <Route path="bank-account" element={<BankAccount />} />
+              <Route path="properties" element={<MyProperties />} />
+              <Route path="rental-history" element={<RentalHistory />} />
+            </Route>
+          </Route>
+          
+          {/* Tenant Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['locatario']} />}>
+            <Route index path="rental-history" element={<RentalHistory />} />
+          </Route>
+
+          {/* Admin Routes */}          
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="banners" element={<AdminBanners />} />
+              <Route path="properties" element={<AdminProperties />} />
+              <Route path="users" element={<AdminUsers />} />
+            </Route>
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

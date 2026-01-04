@@ -9,19 +9,23 @@ const Profile = () => {
   
   // Simula usuário logado (pegando do localStorage ou primeiro usuário)
   const loggedUserId = localStorage.getItem('loggedUserId') || '1';
+  const loggedUserType = localStorage.getItem('loggedUserType');
+  const profileRoute = loggedUserType === 'locador' ? '/landlord/profile' : '/profile';
   const user = users.find(u => u.id === loggedUserId) || users[0];
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
+        {loggedUserType !== 'locador' && (
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="mb-6"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        )}
 
         <div className="max-w-2xl mx-auto">
           <div className="bg-card rounded-xl border border-border p-8">
@@ -92,7 +96,7 @@ const Profile = () => {
             </div>
 
             <div className="mt-8 flex justify-center">
-              <Button onClick={() => navigate('/profile/edit')}>
+              <Button onClick={() => navigate(profileRoute+'/edit')}>
                 <Pencil className="w-4 h-4 mr-2" />
                 Editar Perfil
               </Button>

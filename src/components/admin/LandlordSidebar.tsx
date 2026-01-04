@@ -8,6 +8,7 @@ const menuItems = [
   { path: '/landlord/bank-account', icon: Users, label: 'Contas bancárias' },
   { path: '/landlord/properties', icon: Building2, label: 'Meus Imóveis' },
   { path: '/landlord/rental-history', icon: Users, label: 'Histórico de Locações' },
+  { path: '/landlord/profile', icon: Users, label: 'Meu Perfil' },
 ];
 
 const LandlordSidebar = () => {

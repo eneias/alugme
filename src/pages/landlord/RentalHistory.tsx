@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { rentalContracts, landlordProperties, landlords } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const RentalHistory = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const RentalHistory = () => {
 
   // Mock: pegar contratos do locador logado
   const loggedUserId = localStorage.getItem('loggedUserId');
+  const loggedUserType = localStorage.getItem('loggedUserType');
 
   const landlord = landlords.find(l => l.userId === loggedUserId);
   
@@ -66,7 +69,14 @@ const RentalHistory = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      
+
+      {loggedUserType === 'locatario' && (
+        <>
+          <Header />
+          <br/>
+        </>
+      )}
+
       <main className="flex-1 container">
         <div className="mb-6">    
           <h1 className="text-3xl font-bold">Histórico de Locações</h1>
@@ -247,6 +257,9 @@ const RentalHistory = () => {
         </Dialog>
       </main>
       
+      {loggedUserType === 'locatario' && (
+        <Footer />
+      )}
     </div>
   );
 };
