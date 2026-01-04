@@ -278,6 +278,10 @@ const MyProperties = () => {
     return null;
   }
 
+  const goToProperty = (propertyId: string) => {
+    navigate(`/property/${propertyId}`);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">    
       <main className="flex-1 container">
@@ -393,7 +397,8 @@ const MyProperties = () => {
                         <img
                           src={property.images[0]}
                           alt={property.name}
-                          className="w-12 h-12 rounded-lg object-cover"
+                          onClick={() => goToProperty(property!.id)}
+                          className="w-12 h-12 rounded-lg object-cover cursor-pointer hover:scale-105 transition-transform"
                         />
                         <div>
                           <p className="font-medium">{property.name}</p>

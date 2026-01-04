@@ -36,8 +36,17 @@ const RentalHistory = () => {
     myPropertyIds.includes(contract.propertyId)
   );
 
+  const tenantContracts = rentalContracts.filter(
+    contract => contract.tenantId === loggedUserId
+  );
+
+  const contractsToShow =
+  loggedUserType === 'locatario'
+    ? tenantContracts
+    : myContracts;
+
   // Aplicar filtros
-  const filteredContracts = myContracts.filter(contract => {
+  const filteredContracts = contractsToShow.filter(contract => {
     const property = properties.find(p => p.id === contract.propertyId);
     const tenant = users.find(u => u.id === contract.tenantId);
     
@@ -67,13 +76,17 @@ const RentalHistory = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const goToProperty = (propertyId: string) => {
+    navigate(`/property/${propertyId}`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
 
       {loggedUserType === 'locatario' && (
         <>
           <Header />
-          <br/>
+          <br/><br/>
         </>
       )}
 
@@ -138,7 +151,8 @@ const RentalHistory = () => {
                         <img
                           src={property?.images[0] || '/placeholder.svg'}
                           alt={property?.name}
-                          className="w-full h-full object-cover"
+                          onClick={() => goToProperty(property!.id)}
+                          className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
                         />
                       </div>
 
@@ -258,7 +272,10 @@ const RentalHistory = () => {
       </main>
       
       {loggedUserType === 'locatario' && (
-        <Footer />
+        <>
+          <br/><br/>
+          <Footer />
+        </>
       )}
     </div>
   );
