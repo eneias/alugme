@@ -21,7 +21,7 @@ const LandlordSidebar = () => {
       {/* Botão menu (mobile) */}
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-card border border-border rounded-lg p-2"
+        className="lg:hidden fixed top-4 left-4 z-50 bg-card border border-border rounded-lg p-2"
       >
         <Menu className="w-6 h-6" />
       </button>
