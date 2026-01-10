@@ -79,6 +79,7 @@ const Inspection = () => {
 
   // Check for existing inspection
   useEffect(() => {
+    console.log("Checking for mockInspections:", mockInspections);
     if (contractId) {
       const existing = mockInspections.find(i => i.contractId === contractId);
       if (existing) {
@@ -355,47 +356,51 @@ const Inspection = () => {
               <div className="border-t border-border pt-8">
                 <h3 className="font-display text-xl font-semibold mb-6">Assinaturas Eletrônicas</h3>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {existingInspection.landlordSignature ? (
-                    <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-green-600">Locador</span>
-                      </div>
-                      <p className="font-semibold">{existingInspection.landlordSignature.signedBy}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Assinado em: {formatDateTime(existingInspection.landlordSignature.signedAt)}
-                      </p>
+                {existingInspection.signatures.landlord ? (
+                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-green-600">Locador</span>
                     </div>
-                  ) : (
-                    <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-4 w-4 text-yellow-600" />
-                        <span className="font-medium text-yellow-600">Locador</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
+                    <p className="font-semibold">
+                      Usuário #{existingInspection.signatures.landlord.userId}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Assinado em: {formatDateTime(existingInspection.signatures.landlord.signedAt)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-yellow-600" />
+                      <span className="font-medium text-yellow-600">Locador</span>
                     </div>
-                  )}
+                    <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
+                  </div>
+                )}
 
-                  {existingInspection.tenantSignature ? (
-                    <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-green-600">Locatário</span>
-                      </div>
-                      <p className="font-semibold">{existingInspection.tenantSignature.signedBy}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Assinado em: {formatDateTime(existingInspection.tenantSignature.signedAt)}
-                      </p>
+                {existingInspection.signatures.tenant ? (
+                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-green-600">Locador</span>
                     </div>
-                  ) : (
-                    <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-4 w-4 text-yellow-600" />
-                        <span className="font-medium text-yellow-600">Locatário</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
+                    <p className="font-semibold">
+                      Usuário #{existingInspection.signatures.tenant.userId}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Assinado em: {formatDateTime(existingInspection.signatures.tenant.signedAt)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-yellow-600" />
+                      <span className="font-medium text-yellow-600">Locador</span>
                     </div>
-                  )}
+                    <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
+                  </div>
+                )}
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-6 text-center">

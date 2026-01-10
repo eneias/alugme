@@ -27,6 +27,8 @@ import LandlordSetup from "./pages/landlord/LandlordSetup";
 import RentalHistory from "./pages/landlord/RentalHistory";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from '@/routes/ProtectedRoute';
+import InspectionHistory from "./pages/landlord/InspectionHistory";
+import CreateInspection from "./pages/landlord/CreateInspection";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +37,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename="">
+      <BrowserRouter basename="/alugme">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
@@ -62,6 +64,8 @@ const App = () => (
               <Route path="bank-account" element={<BankAccount />} />
               <Route path="properties" element={<MyProperties />} />
               <Route path="rental-history" element={<RentalHistory />} />
+              <Route path="inspection-history" element={<InspectionHistory />} />
+              <Route path="inspection-create" element={<CreateInspection />} />
             </Route>
           </Route>
           

@@ -7,28 +7,42 @@ export interface InspectionPhoto {
   uploadedBy: 'landlord' | 'tenant';
 }
 
+export type InspectionStatus =
+  | 'pending_tenant'        // aguardando locatário
+  | 'pending_landlord'      // aguardando locador (em divergência)
+  | 'disputed'              // divergência ativa
+  | 'completed';            // assinada e concluída
+
 export interface Inspection {
   id: string;
   contractId: string;
   propertyId: string;
+
   type: 'entrada' | 'saida';
-  status: 'pending_landlord' | 'pending_tenant' | 'disputed' | 'completed';
+
   generalDescription: string;
-  observations: string;
-  photos: InspectionPhoto[];
+  observations?: string;
+
+  photos: InspectionPhoto[]; // até 10
+
+  status: InspectionStatus;
+
   createdAt: string;
-  createdBy: string;
-  landlordSignature?: {
-    signedAt: string;
-    signedBy: string;
-    ip?: string;
+
+  signatures: {
+    landlord?: {
+      userId: string;
+      signedAt: string;
+      ip?: string;
+    };
+    tenant?: {
+      userId: string;
+      signedAt: string;
+      ip?: string;
+    };
   };
-  tenantSignature?: {
-    signedAt: string;
-    signedBy: string;
-    ip?: string;
-  };
-  disputeComments?: string;
+
+  locked: boolean; // 🔐 imutável após assinatura dupla
 }
 
 export const roomOptions = [
@@ -61,8 +75,12 @@ export const mockInspections: Inspection[] = [
     propertyId: '1',
     type: 'entrada',
     status: 'completed',
-    generalDescription: 'Imóvel em excelente estado de conservação. Paredes recém pintadas, piso em perfeitas condições. Instalações elétricas e hidráulicas funcionando normalmente.',
-    observations: 'Foi entregue com 2 conjuntos de chaves. Portão eletrônico com 2 controles. Ar condicionado funcionando em todos os quartos.',
+
+    generalDescription:
+      'Imóvel em excelente estado de conservação. Paredes recém pintadas, piso em perfeitas condições. Instalações elétricas e hidráulicas funcionando normalmente.',
+    observations:
+      'Foi entregue com 2 conjuntos de chaves. Portão eletrônico com 2 controles. Ar condicionado funcionando em todos os quartos.',
+
     photos: [
       {
         id: 'photo-1',
@@ -89,27 +107,37 @@ export const mockInspections: Inspection[] = [
         uploadedBy: 'landlord',
       },
     ],
+
     createdAt: '2024-05-28T09:00:00Z',
-    createdBy: 'landlord-1',
-    landlordSignature: {
-      signedAt: '2024-05-28T11:00:00Z',
-      signedBy: 'Carlos Silva',
-      ip: '192.168.1.1',
+
+    signatures: {
+      landlord: {
+        userId: 'landlord-1',
+        signedAt: '2024-05-28T11:00:00Z',
+        ip: '192.168.1.1',
+      },
+      tenant: {
+        userId: 'tenant-1',
+        signedAt: '2024-05-28T14:30:00Z',
+        ip: '192.168.1.2',
+      },
     },
-    tenantSignature: {
-      signedAt: '2024-05-28T14:30:00Z',
-      signedBy: 'Maria Santos',
-      ip: '192.168.1.2',
-    },
+
+    locked: true,
   },
+
   {
     id: 'inspection-2',
     contractId: 'contract-2',
     propertyId: '1',
     type: 'saida',
     status: 'completed',
-    generalDescription: 'Imóvel devolvido em boas condições. Pequenos desgastes naturais de uso. Limpeza geral realizada.',
-    observations: 'Pequena marca na parede do quarto 1 (não considerada dano). Todas as chaves e controles devolvidos.',
+
+    generalDescription:
+      'Imóvel devolvido em boas condições. Pequenos desgastes naturais de uso. Limpeza geral realizada.',
+    observations:
+      'Pequena marca na parede do quarto 1 (não considerada dano). Todas as chaves e controles devolvidos.',
+
     photos: [
       {
         id: 'photo-4',
@@ -120,27 +148,37 @@ export const mockInspections: Inspection[] = [
         uploadedBy: 'landlord',
       },
     ],
+
     createdAt: '2024-01-02T08:00:00Z',
-    createdBy: 'landlord-1',
-    landlordSignature: {
-      signedAt: '2024-01-02T10:00:00Z',
-      signedBy: 'Carlos Silva',
-      ip: '192.168.1.1',
+
+    signatures: {
+      landlord: {
+        userId: 'landlord-1',
+        signedAt: '2024-01-02T10:00:00Z',
+        ip: '192.168.1.1',
+      },
+      tenant: {
+        userId: 'tenant-2',
+        signedAt: '2024-01-02T10:30:00Z',
+        ip: '192.168.1.3',
+      },
     },
-    tenantSignature: {
-      signedAt: '2024-01-02T10:30:00Z',
-      signedBy: 'Ana Costa',
-      ip: '192.168.1.3',
-    },
+
+    locked: true,
   },
+
   {
     id: 'inspection-3',
     contractId: 'contract-3',
     propertyId: '3',
     type: 'entrada',
     status: 'pending_tenant',
-    generalDescription: 'Cobertura entregue em perfeito estado. Todos os acabamentos de alto padrão em excelente conservação. Piscina limpa e aquecedor funcionando.',
-    observations: 'Entregue com manual de instruções dos equipamentos. 4 vagas de garagem demarcadas. Sistema de segurança ativo.',
+
+    generalDescription:
+      'Cobertura entregue em perfeito estado. Todos os acabamentos de alto padrão em excelente conservação. Piscina limpa e aquecedor funcionando.',
+    observations:
+      'Entregue com manual de instruções dos equipamentos. 4 vagas de garagem demarcadas. Sistema de segurança ativo.',
+
     photos: [
       {
         id: 'photo-5',
@@ -153,21 +191,27 @@ export const mockInspections: Inspection[] = [
       {
         id: 'photo-6',
         url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-        description: 'Suite principal',
+        description: 'Suíte principal',
         room: 'Quarto 1',
         uploadedAt: '2024-07-26T10:15:00Z',
         uploadedBy: 'landlord',
       },
     ],
+
     createdAt: '2024-07-26T09:00:00Z',
-    createdBy: 'landlord-1',
-    landlordSignature: {
-      signedAt: '2024-07-26T11:00:00Z',
-      signedBy: 'Carlos Silva',
-      ip: '192.168.1.1',
+
+    signatures: {
+      landlord: {
+        userId: 'landlord-1',
+        signedAt: '2024-07-26T11:00:00Z',
+        ip: '192.168.1.1',
+      },
     },
+
+    locked: false,
   },
 ];
+
 
 export const inspectionTemplates = {
   default: `TERMO DE VISTORIA DE IMÓVEL
