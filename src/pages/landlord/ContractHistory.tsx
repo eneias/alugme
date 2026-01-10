@@ -11,7 +11,6 @@ import {
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import LandlordSidebar from '@/components/admin/LandlordSidebar';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

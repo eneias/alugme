@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { 
   Plus, Search, Building2, Eye, Edit, FileText, 
   Upload, Trash2, MapPin, Home, DollarSign, CheckCircle, 
-  Clock, XCircle, History
+  Clock, XCircle, History,
+  ClipboardCheck
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -39,6 +40,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { landlordProperties, landlords, LandlordProperty, RentalContract, BankAccount } from '@/data/landlords';
 import { users } from '@/data/users';
+import { Inspection, mockInspections } from '@/data/inspections';
 
 const MyProperties = () => {
   const navigate = useNavigate();
@@ -49,11 +51,14 @@ const MyProperties = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
+  const [isInspectionsDialogOpen, setIsInspectionsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<LandlordProperty | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<LandlordProperty | null>(null);
   const [selectedContract, setSelectedContract] = useState<RentalContract | null>(null);
+  const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [currentLandlord, setCurrentLandlord] = useState<typeof landlords[0] | null>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
   
   const [formData, setFormData] = useState({
     name: '',
@@ -252,6 +257,18 @@ const MyProperties = () => {
     setIsContractDialogOpen(true);
   };
 
+  const handleViewContracts = (property: LandlordProperty) => {
+    setSelectedProperty(property);
+    const contract = selectedProperty?.rentalHistory.find(contract => contract.propertyId === property.id);
+    setSelectedContract(contract);
+    setIsContractDialogOpen(true);
+  };
+
+  const handleViewInspections = (property: LandlordProperty) => {
+    setSelectedProperty(property);
+    setIsInspectionsDialogOpen(true);
+  };
+
   const getAvailabilityBadge = (availability: LandlordProperty['availability']) => {
     switch (availability) {
       case 'available':
@@ -440,6 +457,25 @@ const MyProperties = () => {
                         >
                           <History className="h-4 w-4" />
                         </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewContracts(property)}
+                          title="Contratos"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewInspections(property)}
+                          title="Vistorias"
+                        >
+                          <ClipboardCheck className="h-4 w-4" />
+                        </Button>
+
                         <Button
                           variant="ghost"
                           size="icon"
@@ -676,6 +712,7 @@ const MyProperties = () => {
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Contrato</TableHead>
+                    <TableHead>Inspeção</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -703,6 +740,16 @@ const MyProperties = () => {
                           onClick={() => handleViewContract(contract)}
                         >
                           <FileText className="h-4 w-4 mr-1" />
+                          Ver
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewInspections(selectedProperty)}
+                        >
+                          <ClipboardCheck className="h-4 w-4 mr-1" />
                           Ver
                         </Button>
                       </TableCell>
@@ -768,6 +815,52 @@ const MyProperties = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isInspectionsDialogOpen} onOpenChange={setIsInspectionsDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Vistorias do Imóvel</DialogTitle>
+            <DialogDescription>
+              {selectedProperty?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            {mockInspections.filter(i => i.propertyId === selectedProperty?.id).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Nenhuma vistoria registrada para este imóvel.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Criada em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockInspections
+                    .filter(i => i.propertyId === selectedProperty?.id)
+                    .map(inspection => (
+                      <TableRow key={inspection.id}>
+                        <TableCell className="capitalize">{inspection.type}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{inspection.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(inspection.createdAt).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
     </div>
   );
 };
