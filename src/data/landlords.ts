@@ -26,6 +26,7 @@ export interface RentalContract {
   monthlyRent: number;
   status: 'active' | 'completed' | 'cancelled';
   signedAt: string;
+  createdAt: string;
   contractTerms: string;
 }
 
@@ -104,6 +105,7 @@ export const rentalContracts: RentalContract[] = [
     monthlyRent: 4500,
     status: 'active',
     signedAt: '2024-05-28',
+    createdAt: '2024-05-28',
     contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
 
 CLÁUSULA PRIMEIRA - DO OBJETO
@@ -139,6 +141,7 @@ O presente contrato poderá ser rescindido por qualquer das partes mediante avis
     monthlyRent: 4200,
     status: 'completed',
     signedAt: '2022-12-20',
+    createdAt: '2022-12-20',
     contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
 
 CLÁUSULA PRIMEIRA - DO OBJETO
@@ -163,7 +166,8 @@ O aluguel mensal é de R$ 4.200,00, que deverá ser pago até o dia 10 de cada m
     duration: 24,
     monthlyRent: 8500,
     status: 'active',
-    signedAt: '2024-07-25',
+    signedAt: '2024-07-25',    
+    createdAt: '2024-07-25',    
     contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
 
 CLÁUSULA PRIMEIRA - DO OBJETO

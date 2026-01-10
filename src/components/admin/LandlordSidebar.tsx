@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Building2, Users, ArrowLeft, Menu, X, ClipboardCheck, Clock, Newspaper, Banknote } from 'lucide-react';
+import { Building2, Users, ArrowLeft, Menu, X, ClipboardCheck, Clock, Newspaper, Banknote, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logo from '@/assets/logo2.png';
 
@@ -8,8 +8,9 @@ const menuItems = [
   { path: '/landlord', icon: Newspaper, label: 'Contrato Padrão' },
   { path: '/landlord/bank-account', icon: Banknote, label: 'Contas bancárias' },
   { path: '/landlord/properties', icon: Building2, label: 'Meus Imóveis' },
-  { path: '/landlord/rental-history', icon: Clock, label: 'Histórico de Locações' },
-  { path: '/landlord/inspection-history', icon: ClipboardCheck, label: 'Histórico de Vistorias' },
+  { path: '/landlord/rental-history', icon: Clock, label: 'Locações' },
+  { path: '/landlord/contract-history', icon: Handshake, label: 'Contratos' },
+  { path: '/landlord/inspection-history', icon: ClipboardCheck, label: 'Vistorias' },
   { path: '/landlord/profile', icon: Users, label: 'Meu Perfil' },
 ];
 
@@ -70,7 +71,9 @@ const LandlordSidebar = () => {
               onClick={() => setOpen(false)}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                location.pathname === item.path
+                location.pathname === item.path 
+                || (location.pathname.indexOf('inspection') !== -1 && item.path === '/landlord/inspection-history')
+                || (location.pathname.indexOf('contract') !== -1 && item.path === '/landlord/contract-history')
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-accent text-foreground'
               )}

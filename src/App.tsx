@@ -29,6 +29,8 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import InspectionHistory from "./pages/landlord/InspectionHistory";
 import CreateInspection from "./pages/landlord/CreateInspection";
+import ContractHistory from "./pages/landlord/ContractHistory";
+import ContractDetails from "./pages/landlord/ContractDetails";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +67,8 @@ const App = () => (
               <Route path="properties" element={<MyProperties />} />
               <Route path="rental-history" element={<RentalHistory />} />
               <Route path="inspection-history" element={<InspectionHistory />} />
+              <Route path="contract-history" element={<ContractHistory />} />
+              <Route path="contract/:contractId" element={<ContractDetails />} />
               <Route path="inspection-create" element={<CreateInspection />} />
             </Route>
           </Route>

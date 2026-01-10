@@ -256,8 +256,8 @@ const CreateInspection = () => {
                 Cancelar
               </Button>
               <Button onClick={handleCreateInspection}>
-                <FileText className="h-4 w-4 mr-2" />
-                Criar vistoria
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Criar
               </Button>
             </div>
 
