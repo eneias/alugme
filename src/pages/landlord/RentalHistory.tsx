@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Calendar, User, Home, Eye } from 'lucide-react';
+import { FileText, Calendar, User, Home, Eye, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -259,6 +259,13 @@ const RentalHistory = () => {
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setSelectedContract(null)}>
                     Fechar
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate(`/inspection/${selectedContract.id}`)}
+                  >
+                    <ClipboardCheck className="h-4 w-4 mr-2" />
+                    Registrar Vistoria
                   </Button>
                   <Button onClick={() => window.print()}>
                     <FileText className="h-4 w-4 mr-2" />
