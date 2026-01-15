@@ -1,18 +1,89 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Calendar, User, Home, Eye, ClipboardCheck } from 'lucide-react';
+import { FileText, Calendar, User, Home, Eye, ClipboardCheck, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { rentalContracts, landlordProperties, landlords } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
+import { mockInspections, Inspection } from '@/data/inspections';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+
+// Helper para obter vistorias de um contrato
+const getContractInspections = (contractId: string) => {
+  return mockInspections.filter(i => i.contractId === contractId);
+};
+
+const getInspectionStatusIcon = (inspection: Inspection | undefined, type: 'entrada' | 'saida') => {
+  if (!inspection) {
+    return (
+      <Tooltip>
+        <TooltipTrigger>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-xs">Pendente</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Vistoria de {type} não realizada</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (inspection.status === 'completed') {
+    return (
+      <Tooltip>
+        <TooltipTrigger>
+          <div className="flex items-center gap-1 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-xs">Concluída</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Vistoria de {type} concluída e assinada</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (inspection.status === 'disputed') {
+    return (
+      <Tooltip>
+        <TooltipTrigger>
+          <div className="flex items-center gap-1 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-xs">Divergência</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Vistoria de {type} com divergência</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <div className="flex items-center gap-1 text-yellow-600">
+          <Clock className="h-4 w-4" />
+          <span className="text-xs">Aguardando</span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Vistoria de {type} aguardando assinatura</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+};
 
 const RentalHistory = () => {
   const navigate = useNavigate();
@@ -141,6 +212,9 @@ const RentalHistory = () => {
             {filteredContracts.map(contract => {
               const property = properties.find(p => p.id === contract.propertyId);
               const tenant = users.find(u => u.id === contract.tenantId);
+              const contractInspections = getContractInspections(contract.id);
+              const entradaInspection = contractInspections.find(i => i.type === 'entrada');
+              const saidaInspection = contractInspections.find(i => i.type === 'saida');
 
               return (
                 <Card key={contract.id} className="hover:shadow-md transition-shadow">
@@ -163,7 +237,9 @@ const RentalHistory = () => {
                             <h3 className="font-semibold text-lg">{property?.name}</h3>
                             <p className="text-sm text-muted-foreground">{property?.address}</p>
                           </div>
-                          {getStatusBadge(contract.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(contract.status)}
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -189,6 +265,26 @@ const RentalHistory = () => {
                             </span>
                           </div>
                         </div>
+
+                        {/* Indicadores de Vistoria */}
+                        <TooltipProvider>
+                          <div className="flex items-center gap-4 p-2 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground font-medium">Vistorias:</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground">Entrada:</span>
+                                {getInspectionStatusIcon(entradaInspection, 'entrada')}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground">Saída:</span>
+                                {getInspectionStatusIcon(saidaInspection, 'saida')}
+                              </div>
+                            </div>
+                          </div>
+                        </TooltipProvider>
 
                         <div className="flex justify-end">
                           <Button 
