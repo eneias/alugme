@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-import { rentalContracts, landlordProperties, landlords } from '@/data/landlords';
+import { rentalContracts, landlords, getContractSignedDate } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
 import { mockInspections, Inspection } from '@/data/inspections';
@@ -98,9 +98,9 @@ const RentalHistory = () => {
   const landlord = landlords.find(l => l.userId === loggedUserId);
   
   // Pegar propriedades do locador
-  const myPropertyIds = landlordProperties
-    .filter(lp => lp.landlordId === landlord?.id)
-    .map(lp => lp.id);
+  const myPropertyIds = properties
+    .filter(p => p.landlordId === landlord?.id)
+    .map(p => p.id);
 
   // Pegar contratos dessas propriedades
   const myContracts = rentalContracts.filter(contract => 
@@ -145,6 +145,14 @@ const RentalHistory = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const formatSignatureDate = (contract: typeof rentalContracts[0]) => {
+    const signedDate = getContractSignedDate(contract);
+    if (signedDate) {
+      return formatDate(signedDate);
+    }
+    return 'Não assinado';
   };
 
   const goToProperty = (propertyId: string) => {
@@ -340,7 +348,37 @@ const RentalHistory = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Assinado em</p>
-                    <p className="font-medium">{formatDate(selectedContract.signedAt)}</p>
+                    <p className="font-medium">{formatSignatureDate(selectedContract)}</p>
+                  </div>
+                </div>
+
+                {/* Signatures Info */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-primary/5 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura do Locador</p>
+                    {selectedContract.signatures.landlord ? (
+                      <div>
+                        <p className="font-medium text-green-600">✓ Assinado</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(selectedContract.signatures.landlord.signedAt).toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-yellow-600">Pendente</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura do Locatário</p>
+                    {selectedContract.signatures.tenant ? (
+                      <div>
+                        <p className="font-medium text-green-600">✓ Assinado</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(selectedContract.signatures.tenant.signedAt).toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-yellow-600">Pendente</p>
+                    )}
                   </div>
                 </div>
 

@@ -38,7 +38,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { landlordProperties, landlords, LandlordProperty, RentalContract, BankAccount } from '@/data/landlords';
+import { landlords, RentalContract, BankAccount, rentalContracts, getPropertyContracts, getContractSignedDate } from '@/data/landlords';
+import { properties, Property } from '@/data/properties';
 import { users } from '@/data/users';
 import { Inspection, mockInspections } from '@/data/inspections';
 
@@ -47,13 +48,13 @@ const MyProperties = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState('all');
-  const [properties, setProperties] = useState<LandlordProperty[]>(landlordProperties);
+  const [propertiesList, setPropertiesList] = useState<Property[]>(properties);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
   const [isInspectionsDialogOpen, setIsInspectionsDialogOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<LandlordProperty | null>(null);
-  const [selectedProperty, setSelectedProperty] = useState<LandlordProperty | null>(null);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedContract, setSelectedContract] = useState<RentalContract | null>(null);
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [currentLandlord, setCurrentLandlord] = useState<typeof landlords[0] | null>(null);
@@ -123,7 +124,7 @@ const MyProperties = () => {
   }, [navigate, toast]);
 
   const filteredProperties = useMemo(() => {
-    return properties.filter(property => {
+    return propertiesList.filter(property => {
       const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
         property.neighborhood.toLowerCase().includes(searchTerm.toLowerCase());
@@ -135,9 +136,9 @@ const MyProperties = () => {
       
       return matchesSearch && matchesAvailability && matchesLandlord;
     });
-  }, [properties, searchTerm, availabilityFilter, currentLandlord]);
+  }, [propertiesList, searchTerm, availabilityFilter, currentLandlord]);
 
-  const handleOpenDialog = (property?: LandlordProperty) => {
+  const handleOpenDialog = (property?: Property) => {
     if (property) {
       setEditingProperty(property);
       setFormData({
@@ -151,7 +152,7 @@ const MyProperties = () => {
         area: property.area.toString(),
         description: property.description,
         amenities: property.amenities.join(', '),
-        bankAccountId: property.bankAccountId,
+        bankAccountId: property.bankAccountId || '',
       });
       setUploadedImages(property.images);
     } else {
@@ -197,7 +198,7 @@ const MyProperties = () => {
   const handleSubmit = () => {
     if (!currentLandlord) return;
 
-    const newProperty: LandlordProperty = {
+    const newProperty: Property = {
       id: editingProperty?.id || Date.now().toString(),
       landlordId: currentLandlord.id,
       bankAccountId: formData.bankAccountId,
@@ -219,14 +220,13 @@ const MyProperties = () => {
       ],
       coordinates: { lat: -23.5505, lng: -46.6333 },
       availability: editingProperty?.availability || 'available',
-      rentalHistory: editingProperty?.rentalHistory || [],
     };
 
     if (editingProperty) {
-      setProperties(prev => prev.map(p => p.id === editingProperty.id ? newProperty : p));
+      setPropertiesList(prev => prev.map(p => p.id === editingProperty.id ? newProperty : p));
       toast({ title: 'Imóvel atualizado com sucesso!' });
     } else {
-      setProperties(prev => [...prev, newProperty]);
+      setPropertiesList(prev => [...prev, newProperty]);
       toast({ title: 'Imóvel cadastrado com sucesso!' });
     }
 
@@ -234,7 +234,7 @@ const MyProperties = () => {
   };
 
   const handleDelete = (id: string) => {
-    const property = properties.find(p => p.id === id);
+    const property = propertiesList.find(p => p.id === id);
     if (property?.availability === 'rented') {
       toast({
         title: 'Não é possível excluir',
@@ -243,11 +243,11 @@ const MyProperties = () => {
       });
       return;
     }
-    setProperties(prev => prev.filter(p => p.id !== id));
+    setPropertiesList(prev => prev.filter(p => p.id !== id));
     toast({ title: 'Imóvel removido com sucesso!' });
   };
 
-  const handleViewHistory = (property: LandlordProperty) => {
+  const handleViewHistory = (property: Property) => {
     setSelectedProperty(property);
     setIsHistoryDialogOpen(true);
   };
@@ -257,19 +257,21 @@ const MyProperties = () => {
     setIsContractDialogOpen(true);
   };
 
-  const handleViewContracts = (property: LandlordProperty) => {
+  const handleViewContracts = (property: Property) => {
     setSelectedProperty(property);
-    const contract = selectedProperty?.rentalHistory.find(contract => contract.propertyId === property.id);
-    setSelectedContract(contract);
+    const contracts = getPropertyContracts(property.id);
+    if (contracts.length > 0) {
+      setSelectedContract(contracts[0]);
+    }
     setIsContractDialogOpen(true);
   };
 
-  const handleViewInspections = (property: LandlordProperty) => {
+  const handleViewInspections = (property: Property) => {
     setSelectedProperty(property);
     setIsInspectionsDialogOpen(true);
   };
 
-  const getAvailabilityBadge = (availability: LandlordProperty['availability']) => {
+  const getAvailabilityBadge = (availability: Property['availability']) => {
     switch (availability) {
       case 'available':
         return <Badge className="bg-green-500/10 text-green-600 border-green-500/20"><CheckCircle className="w-3 h-3 mr-1" /> Disponível</Badge>;
@@ -291,12 +293,25 @@ const MyProperties = () => {
     }
   };
 
+  const formatSignatureDate = (contract: RentalContract) => {
+    const signedDate = getContractSignedDate(contract);
+    if (signedDate) {
+      return new Date(signedDate).toLocaleDateString('pt-BR');
+    }
+    return 'Não assinado';
+  };
+
   if (!currentLandlord) {
     return null;
   }
 
   const goToProperty = (propertyId: string) => {
     navigate(`/property/${propertyId}`);
+  };
+
+  // Get rental history for a property
+  const getPropertyRentalHistory = (propertyId: string) => {
+    return getPropertyContracts(propertyId);
   };
 
   return (
@@ -437,7 +452,7 @@ const MyProperties = () => {
                     </TableCell>
                     <TableCell>{getAvailabilityBadge(property.availability)}</TableCell>
                     <TableCell>
-                      <span className="text-sm">{property.rentalHistory.length} contrato(s)</span>
+                      <span className="text-sm">{getPropertyContracts(property.id).length} contrato(s)</span>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -697,7 +712,7 @@ const MyProperties = () => {
           </DialogHeader>
 
           <div className="py-4">
-            {selectedProperty?.rentalHistory.length === 0 ? (
+            {selectedProperty && getPropertyRentalHistory(selectedProperty.id).length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Este imóvel ainda não possui histórico de locações.</p>
@@ -716,7 +731,7 @@ const MyProperties = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedProperty?.rentalHistory.map((contract) => (
+                  {selectedProperty && getPropertyRentalHistory(selectedProperty.id).map((contract) => (
                     <TableRow key={contract.id}>
                       <TableCell>
                         <div>
@@ -747,7 +762,7 @@ const MyProperties = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleViewInspections(selectedProperty)}
+                          onClick={() => selectedProperty && handleViewInspections(selectedProperty)}
                         >
                           <ClipboardCheck className="h-4 w-4 mr-1" />
                           Ver
@@ -768,7 +783,7 @@ const MyProperties = () => {
           <DialogHeader>
             <DialogTitle>Contrato de Locação</DialogTitle>
             <DialogDescription>
-              Contrato #{selectedContract?.id} - Assinado em {selectedContract?.signedAt && new Date(selectedContract.signedAt).toLocaleDateString('pt-BR')}
+              Contrato #{selectedContract?.id} - Assinado em {selectedContract && formatSignatureDate(selectedContract)}
             </DialogDescription>
           </DialogHeader>
 
@@ -796,6 +811,38 @@ const MyProperties = () => {
                 <p className="font-medium">R$ {selectedContract?.monthlyRent.toLocaleString('pt-BR')}</p>
               </div>
             </div>
+
+            {/* Signatures Info */}
+            {selectedContract && (
+              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-primary/5 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Assinatura do Locador</p>
+                  {selectedContract.signatures.landlord ? (
+                    <div>
+                      <p className="font-medium text-green-600">✓ Assinado</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(selectedContract.signatures.landlord.signedAt).toLocaleString('pt-BR')}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-yellow-600">Pendente</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Assinatura do Locatário</p>
+                  {selectedContract.signatures.tenant ? (
+                    <div>
+                      <p className="font-medium text-green-600">✓ Assinado</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(selectedContract.signatures.tenant.signedAt).toLocaleString('pt-BR')}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-yellow-600">Pendente</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Contract Terms */}
             <div className="prose prose-sm max-w-none">

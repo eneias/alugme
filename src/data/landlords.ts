@@ -1,5 +1,3 @@
-import { Property } from './properties';
-
 export interface BankAccount {
   id: string;
   bank: string;
@@ -10,6 +8,12 @@ export interface BankAccount {
   holderCpf: string;
   validated: boolean;
   createdAt: string;
+}
+
+export interface ContractSignature {
+  userId: string;
+  signedAt: string;
+  ip?: string;
 }
 
 export interface RentalContract {
@@ -25,16 +29,11 @@ export interface RentalContract {
   duration: number; // meses
   monthlyRent: number;
   status: 'active' | 'completed' | 'cancelled';
-  signedAt: string;
-  createdAt: string;
+  signatures: {
+    landlord?: ContractSignature;
+    tenant?: ContractSignature;
+  };
   contractTerms: string;
-}
-
-export interface LandlordProperty extends Property {
-  landlordId: string;
-  bankAccountId: string;
-  availability: 'available' | 'rented' | 'maintenance';
-  rentalHistory: RentalContract[];
 }
 
 export interface Landlord {
@@ -104,8 +103,18 @@ export const rentalContracts: RentalContract[] = [
     duration: 12,
     monthlyRent: 4500,
     status: 'active',
-    signedAt: '2024-05-28',
-    createdAt: '2024-05-28',
+    signatures: {
+      landlord: {
+        userId: '1',
+        signedAt: '2024-05-28T10:30:00Z',
+        ip: '192.168.1.100'
+      },
+      tenant: {
+        userId: '2',
+        signedAt: '2024-05-28T14:45:00Z',
+        ip: '192.168.1.101'
+      }
+    },
     contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
 
 CLÁUSULA PRIMEIRA - DO OBJETO
@@ -140,8 +149,18 @@ O presente contrato poderá ser rescindido por qualquer das partes mediante avis
     duration: 12,
     monthlyRent: 4200,
     status: 'completed',
-    signedAt: '2022-12-20',
-    createdAt: '2022-12-20',
+    signatures: {
+      landlord: {
+        userId: '1',
+        signedAt: '2022-12-20T09:00:00Z',
+        ip: '192.168.1.100'
+      },
+      tenant: {
+        userId: '4',
+        signedAt: '2022-12-20T11:30:00Z',
+        ip: '192.168.1.102'
+      }
+    },
     contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
 
 CLÁUSULA PRIMEIRA - DO OBJETO
@@ -166,8 +185,18 @@ O aluguel mensal é de R$ 4.200,00, que deverá ser pago até o dia 10 de cada m
     duration: 24,
     monthlyRent: 8500,
     status: 'active',
-    signedAt: '2024-07-25',    
-    createdAt: '2024-07-25',    
+    signatures: {
+      landlord: {
+        userId: '1',
+        signedAt: '2024-07-25T16:00:00Z',
+        ip: '192.168.1.100'
+      },
+      tenant: {
+        userId: '2',
+        signedAt: '2024-07-25T18:20:00Z',
+        ip: '192.168.1.101'
+      }
+    },
     contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
 
 CLÁUSULA PRIMEIRA - DO OBJETO
@@ -181,88 +210,26 @@ O aluguel mensal é de R$ 8.500,00, que deverá ser pago até o dia 10 de cada m
   },
 ];
 
-export const landlordProperties: LandlordProperty[] = [
-  {
-    id: "1",
-    landlordId: 'landlord-1',
-    bankAccountId: 'bank-1',
-    name: "Casa Vista Mar",
-    address: "Rua das Palmeiras, 120",
-    neighborhood: "Copacabana",
-    city: "Rio de Janeiro",
-    price: 4500,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 150,
-    rating: 4.8,
-    reviews: 42,
-    createdAt: "2024-12-01",
-    description: "Linda casa com vista panorâmica para o mar. Ambiente espaçoso e arejado, perfeito para famílias.",
-    amenities: ["Piscina", "Churrasqueira", "Garagem", "Wi-Fi", "Ar condicionado", "Vista mar"],
-    images: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-    ],
-    coordinates: { lat: -22.9714, lng: -43.1823 },
-    availability: 'rented',
-    rentalHistory: [
-      rentalContracts[0],
-      rentalContracts[1],
-    ],
-  },
-  {
-    id: "3",
-    landlordId: 'landlord-1',
-    bankAccountId: 'bank-1',
-    name: "Cobertura Jardins",
-    address: "Rua Oscar Freire, 800",
-    neighborhood: "Jardins",
-    city: "São Paulo",
-    price: 8500,
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 280,
-    rating: 4.9,
-    reviews: 56,
-    createdAt: "2024-12-10",
-    description: "Cobertura duplex exclusiva nos Jardins. Terraço com vista 360° da cidade.",
-    amenities: ["Piscina privativa", "Terraço", "Churrasqueira", "4 vagas", "Wi-Fi", "Ar condicionado"],
-    images: [
-      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-    ],
-    coordinates: { lat: -23.5665, lng: -46.6720 },
-    availability: 'rented',
-    rentalHistory: [
-      rentalContracts[2],
-    ],
-  },
-  {
-    id: "5",
-    landlordId: 'landlord-1',
-    bankAccountId: 'bank-1',
-    name: "Loft Industrial",
-    address: "Rua Augusta, 2000",
-    neighborhood: "Consolação",
-    city: "São Paulo",
-    price: 2500,
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 60,
-    rating: 4.6,
-    reviews: 22,
-    createdAt: "2024-11-25",
-    description: "Loft estilo industrial com pé direito alto e grandes janelas.",
-    amenities: ["Rooftop", "Lavanderia", "Bike rack", "Wi-Fi", "Pet friendly"],
-    images: [
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
-    ],
-    coordinates: { lat: -23.5534, lng: -46.6564 },
-    availability: 'available',
-    rentalHistory: [],
-  },
-];
+// Helper para obter contratos de uma propriedade
+export const getPropertyContracts = (propertyId: string): RentalContract[] => {
+  return rentalContracts.filter(c => c.propertyId === propertyId);
+};
+
+// Helper para verificar se contrato está assinado por ambas as partes
+export const isContractFullySigned = (contract: RentalContract): boolean => {
+  return !!(contract.signatures.landlord && contract.signatures.tenant);
+};
+
+// Helper para obter data de assinatura formatada
+export const getContractSignedDate = (contract: RentalContract): string | null => {
+  if (contract.signatures.tenant?.signedAt) {
+    return contract.signatures.tenant.signedAt;
+  }
+  if (contract.signatures.landlord?.signedAt) {
+    return contract.signatures.landlord.signedAt;
+  }
+  return null;
+};
 
 export const contractTemplates = {
   default: `CONTRATO DE LOCAÇÃO RESIDENCIAL

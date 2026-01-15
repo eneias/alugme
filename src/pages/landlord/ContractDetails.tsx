@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-import { rentalContracts, landlords, landlordProperties } from '@/data/landlords';
+import { rentalContracts, landlords, getContractSignedDate } from '@/data/landlords';
 import { properties } from '@/data/properties';
 
 const statusLabel: Record<string, string> = {
@@ -48,9 +48,9 @@ const ContractDetails = () => {
   const landlord = landlords.find(l => l.userId === loggedUserId);
 
   /** 🏠 Propriedades do locador */
-  const myPropertyIds = landlordProperties
-    .filter(lp => lp.landlordId === landlord?.id)
-    .map(lp => lp.id);
+  const myPropertyIds = properties
+    .filter(p => p.landlordId === landlord?.id)
+    .map(p => p.id);
 
   /** 📄 Contrato */
   const contract = rentalContracts.find(c => c.id === contractId);
@@ -66,6 +66,14 @@ const ContractDetails = () => {
   }
 
   const property = properties.find(p => p.id === contract.propertyId);
+
+  const formatSignatureDate = () => {
+    const signedDate = getContractSignedDate(contract);
+    if (signedDate) {
+      return new Date(signedDate).toLocaleDateString('pt-BR');
+    }
+    return 'Não assinado';
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -111,7 +119,7 @@ const ContractDetails = () => {
             <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span>Locatário: {contract.tenantId}</span>
+                <span>Locatário: {contract.tenantName}</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -126,6 +134,42 @@ const ContractDetails = () => {
                 R$ {contract.monthlyRent}
               </div>
 
+              <div>
+                <span className="font-medium">Assinado em:</span>{' '}
+                {formatSignatureDate()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Assinaturas */}
+          <Card>
+            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground mb-1">Assinatura do Locador</p>
+                {contract.signatures.landlord ? (
+                  <div>
+                    <p className="font-medium text-green-600">✓ Assinado</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(contract.signatures.landlord.signedAt).toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-yellow-600">Pendente</p>
+                )}
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">Assinatura do Locatário</p>
+                {contract.signatures.tenant ? (
+                  <div>
+                    <p className="font-medium text-green-600">✓ Assinado</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(contract.signatures.tenant.signedAt).toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-yellow-600">Pendente</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 

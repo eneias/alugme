@@ -126,6 +126,7 @@ const AdminProperties = () => {
       rating: editingProperty?.rating || 4.5,
       createdAt: editingProperty?.createdAt || new Date().toISOString().split('T')[0],
       coordinates: editingProperty?.coordinates || { lat: -23.5505, lng: -46.6333 },
+      availability: editingProperty?.availability || 'available',
     };
 
     if (editingProperty) {

@@ -15,7 +15,7 @@ import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-import { rentalContracts, landlords, landlordProperties } from '@/data/landlords';
+import { rentalContracts, landlords } from '@/data/landlords';
 import { properties } from '@/data/properties';
 
 const statusLabel: Record<string, string> = {

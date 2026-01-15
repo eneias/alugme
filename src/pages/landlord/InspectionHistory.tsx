@@ -32,7 +32,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 import { mockInspections } from '@/data/inspections';
-import { rentalContracts, landlordProperties, landlords } from '@/data/landlords';
+import { rentalContracts, landlords } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
 
@@ -48,9 +48,9 @@ const InspectionHistory = () => {
 
   const landlord = landlords.find(l => l.userId === loggedUserId);
 
-  const myPropertyIds = landlordProperties
-    .filter(lp => lp.landlordId === landlord?.id)
-    .map(lp => lp.id);
+  const myPropertyIds = properties
+    .filter(p => p.landlordId === landlord?.id)
+    .map(p => p.id);
 
   const myContracts = rentalContracts.filter(c =>
     myPropertyIds.includes(c.propertyId)
