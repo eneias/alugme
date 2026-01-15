@@ -17,7 +17,7 @@ import {
   SelectItem
 } from '@/components/ui/select';
 
-import { rentalContracts, landlords, landlordProperties } from '@/data/landlords';
+import { rentalContracts, landlords } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { mockInspections } from '@/data/inspections';
 
@@ -45,9 +45,9 @@ const CreateInspection = () => {
   /** 👤 Locador */
   const landlord = landlords.find(l => l.userId === loggedUserId);
 
-  /** 🏠 Contratos do locador */
-  const myProperties = landlordProperties.filter(
-    lp => lp.landlordId === landlord?.id
+  /** 🏠 Propriedades do locador */
+  const myProperties = properties.filter(
+    p => p.landlordId === landlord?.id
   );
 
   const myContracts = rentalContracts.filter(contract =>

@@ -18,6 +18,10 @@ export interface Property {
     lat: number;
     lng: number;
   };
+  // Campos do antigo LandlordProperty
+  landlordId?: string;
+  bankAccountId?: string;
+  availability: 'available' | 'rented' | 'maintenance';
 }
 
 export const properties: Property[] = [
@@ -48,7 +52,10 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800",
       "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800"
     ],
-    coordinates: { lat: -22.9714, lng: -43.1823 }
+    coordinates: { lat: -22.9714, lng: -43.1823 },
+    landlordId: 'landlord-1',
+    bankAccountId: 'bank-1',
+    availability: 'rented'
   },
   {
     id: "2",
@@ -77,7 +84,10 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?w=800",
       "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800"
     ],
-    coordinates: { lat: -23.5614, lng: -46.6565 }
+    coordinates: { lat: -23.5614, lng: -46.6565 },
+    landlordId: 'landlord-2',
+    bankAccountId: 'bank-2',
+    availability: 'available'
   },
   {
     id: "3",
@@ -106,7 +116,10 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800",
       "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800"
     ],
-    coordinates: { lat: -23.5665, lng: -46.6720 }
+    coordinates: { lat: -23.5665, lng: -46.6720 },
+    landlordId: 'landlord-1',
+    bankAccountId: 'bank-1',
+    availability: 'rented'
   },
   {
     id: "4",
@@ -135,7 +148,10 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800",
       "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800"
     ],
-    coordinates: { lat: -12.9730, lng: -38.5108 }
+    coordinates: { lat: -12.9730, lng: -38.5108 },
+    landlordId: undefined,
+    bankAccountId: undefined,
+    availability: 'available'
   },
   {
     id: "5",
@@ -164,7 +180,10 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800",
       "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800"
     ],
-    coordinates: { lat: -23.5534, lng: -46.6564 }
+    coordinates: { lat: -23.5534, lng: -46.6564 },
+    landlordId: 'landlord-1',
+    bankAccountId: 'bank-1',
+    availability: 'available'
   },
   {
     id: "6",
@@ -193,7 +212,10 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800",
       "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800"
     ],
-    coordinates: { lat: -3.7253, lng: -38.4973 }
+    coordinates: { lat: -3.7253, lng: -38.4973 },
+    landlordId: undefined,
+    bankAccountId: undefined,
+    availability: 'available'
   }
 ];
 
