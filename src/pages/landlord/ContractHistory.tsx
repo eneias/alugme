@@ -45,7 +45,7 @@ const ContractHistory = () => {
   const landlord = landlords.find(l => l.userId === loggedUserId);
 
   /** 🏠 Propriedades do locador */
-  const myProperties = landlordProperties.filter(
+  const myProperties = properties.filter(
     lp => lp.landlordId === landlord?.id
   );
 
