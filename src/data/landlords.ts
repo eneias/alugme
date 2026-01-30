@@ -233,7 +233,7 @@ export const rentals: Rental[] = [
   },
   {
     id: 'rental-2',
-    propertyId: '1',
+    propertyId: '6',
     tenantId: '4',
     startDate: '2023-01-01',
     endDate: '2024-01-01',
