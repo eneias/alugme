@@ -1,12 +1,11 @@
-import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Home,
   User,
   Calendar,
-  Clock,
   ArrowRight,
   Handshake,
+  FileText,
 } from 'lucide-react';
 
 import Header from '@/components/Header';
@@ -15,19 +14,19 @@ import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-import { rentalContracts, landlords } from '@/data/landlords';
+import { landlords, rentals, Rental } from '@/data/landlords';
 import { properties } from '@/data/properties';
 
 const statusLabel: Record<string, string> = {
   active: 'Ativo',
   completed: 'Encerrado',
-  pending: 'Pendente',
+  cancelled: 'Cancelado',
 };
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
+const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   active: 'default',
   completed: 'secondary',
-  pending: 'outline',
+  cancelled: 'destructive',
 };
 
 const ContractHistory = () => {
@@ -46,15 +45,13 @@ const ContractHistory = () => {
 
   /** 🏠 Propriedades do locador */
   const myProperties = properties.filter(
-    lp => lp.landlordId === landlord?.id
+    p => p.landlordId === landlord?.id
   );
 
-  /** 📄 Contratos do locador */
-  const myContracts = useMemo(() => {
-    return rentalContracts.filter(contract =>
-      myProperties.some(p => p.id === contract.propertyId)
-    );
-  }, [myProperties]);
+  /** 📋 Locações do locador */
+  const myRentals: Rental[] = rentals.filter(rental =>
+    myProperties.some(p => p.id === rental.propertyId)
+  );
 
   const goToProperty = (propertyId: string) => {
     navigate(`/property/${propertyId}`);
@@ -76,28 +73,28 @@ const ContractHistory = () => {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Handshake className="h-6 w-6" />
-              Contratos
+              Locações
             </h1>
             <p className="text-muted-foreground">
-              Visualize todos os contratos vinculados aos seus imóveis
+              Visualize todas as locações vinculadas aos seus imóveis
             </p>
           </div>
 
-          {/* Lista */}
-          {myContracts.length === 0 ? (
+          {/* Lista de Locações */}
+          {myRentals.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nenhum contrato encontrado.
+              Nenhuma locação encontrada.
             </p>
           ) : (
             <div className="space-y-4">
-              {myContracts.map(contract => {
+              {myRentals.map(rental => {
                 const property = properties.find(
-                  p => p.id === contract.propertyId
+                  p => p.id === rental.propertyId
                 );
 
                 return (
                   <Card
-                    key={contract.id}
+                    key={rental.id}
                     className="hover:shadow-md transition-shadow"
                   >
                     <CardContent className="p-6">
@@ -125,44 +122,43 @@ const ContractHistory = () => {
                               </p>
                             </div>
 
-                            <Badge variant={statusVariant[contract.status]}>
-                              {statusLabel[contract.status]}
+                            <Badge variant={statusVariant[rental.status]}>
+                              {statusLabel[rental.status]}
                             </Badge>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-muted-foreground" />
-                              <span>Locatário: {contract.tenantId}</span>
+                              <span>Locatário: {rental.contracts[0]?.tenantName || rental.tenantId}</span>
                             </div>
 
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span>
-                                {contract.startDate} → {contract.endDate}
+                                {rental.startDate} → {rental.endDate}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <FileText className="h-4 w-4 text-muted-foreground" />
                               <span>
-                                Criado em{' '}
-                                {new Date(
-                                  contract.startDate
-                                ).toLocaleDateString()}
+                                {rental.contracts.length} contrato(s)
                               </span>
                             </div>
                           </div>
 
                           {/* Ação */}
                           <div className="flex justify-end">
-                            <Link
-                              to={`/landlord/contract/${contract.id}`}
-                              className="text-sm flex items-center gap-1 text-primary hover:underline"
-                            >
-                              Ver contrato
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
+                            {rental.contracts.length > 0 && (
+                              <Link
+                                to={`/landlord/contract/${rental.contracts[0].id}`}
+                                className="text-sm flex items-center gap-1 text-primary hover:underline"
+                              >
+                                Ver contrato
+                                <ArrowRight className="h-4 w-4" />
+                              </Link>
+                            )}
                           </div>
                         </div>
                       </div>

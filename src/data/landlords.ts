@@ -36,6 +36,16 @@ export interface RentalContract {
   contractTerms: string;
 }
 
+export interface Rental {
+  id: string;
+  propertyId: string;
+  tenantId: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'cancelled';
+  contracts: RentalContract[];
+}
+
 export interface Landlord {
   id: string;
   userId: string;
@@ -209,6 +219,45 @@ CLÁUSULA TERCEIRA - DO ALUGUEL
 O aluguel mensal é de R$ 8.500,00, que deverá ser pago até o dia 10 de cada mês.`,
   },
 ];
+
+// Locações mockadas
+export const rentals: Rental[] = [
+  {
+    id: 'rental-1',
+    propertyId: '1',
+    tenantId: '2',
+    startDate: '2024-06-01',
+    endDate: '2025-06-01',
+    status: 'active',
+    contracts: [rentalContracts[0]], // contract-1
+  },
+  {
+    id: 'rental-2',
+    propertyId: '1',
+    tenantId: '4',
+    startDate: '2023-01-01',
+    endDate: '2024-01-01',
+    status: 'completed',
+    contracts: [rentalContracts[1]], // contract-2
+  },
+  {
+    id: 'rental-3',
+    propertyId: '3',
+    tenantId: '2',
+    startDate: '2024-08-01',
+    endDate: '2026-08-01',
+    status: 'active',
+    contracts: [rentalContracts[2]], // contract-3
+  },
+];
+
+// Helper para obter locações de um locador
+export const getLandlordRentals = (landlordId: string, properties: { id: string; landlordId?: string }[]): Rental[] => {
+  const landlordPropertyIds = properties
+    .filter(p => p.landlordId === landlordId)
+    .map(p => p.id);
+  return rentals.filter(r => landlordPropertyIds.includes(r.propertyId));
+};
 
 // Helper para obter contratos de uma propriedade
 export const getPropertyContracts = (propertyId: string): RentalContract[] => {
