@@ -52,7 +52,7 @@ interface PhotoUpload {
 }
 
 const Inspection = () => {
-  const { contractId } = useParams();
+  const { id: inspId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -74,14 +74,15 @@ const Inspection = () => {
   const isLandlord = loggedUser?.type === "locador";
 
   // Find contract and property
-  const contract = rentalContracts.find(c => c.id === contractId);
-  const property = contract ? properties.find(p => p.id === contract.propertyId) : null;
+  const inspec = mockInspections.find(i => i.id === inspId);
+  const contract = rentalContracts.find(c => c.propertyId === inspec.propertyId);
+  const property = properties.find(p => p.id === inspec.propertyId);
 
   // Check for existing inspection
   useEffect(() => {
     console.log("Checking for mockInspections:", mockInspections);
-    if (contractId) {
-      const existing = mockInspections.find(i => i.contractId === contractId);
+    if (inspId) {
+      const existing = mockInspections.find(i => i.id === inspId);
       if (existing) {
         setExistingInspection(existing);
         if (existing.status === 'completed') {
@@ -93,7 +94,7 @@ const Inspection = () => {
         }
       }
     }
-  }, [contractId, isLandlord]);
+  }, [inspId, isLandlord]);
 
   // Verify login
   useEffect(() => {

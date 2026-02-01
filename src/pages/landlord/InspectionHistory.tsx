@@ -7,7 +7,9 @@ import {
   Eye,
   FileCheck,
   AlertTriangle,
-  Clock
+  Clock,
+  CircleCheckBig,
+  CircleMinus
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,7 +34,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 import { mockInspections } from '@/data/inspections';
-import { rentalContracts, landlords } from '@/data/landlords';
+import { rentalContracts, landlords, rentals } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
 
@@ -52,18 +54,19 @@ const InspectionHistory = () => {
     .filter(p => p.landlordId === landlord?.id)
     .map(p => p.id);
 
-  const myContracts = rentalContracts.filter(c =>
+  const myRentals = rentals.filter(c =>
     myPropertyIds.includes(c.propertyId)
   );
-
-  const myContractIds = myContracts.map(c => c.id);
+  console.log('myRentals', myRentals)
+  const myContractIds = myRentals.map(c => c.propertyId);
+  console.log('myContractIds', myContractIds)
 
   const inspectionsToShow =
     loggedUserType === 'locatario'
       ? mockInspections.filter(i =>
-          rentalContracts.find(c => c.id === i.contractId)?.tenantId === loggedUserId
+          rentalContracts.find(c => c.id === i.propertyId)?.tenantId === loggedUserId
         )
-      : mockInspections.filter(i => myContractIds.includes(i.contractId));
+      : mockInspections.filter(i => myContractIds.includes(i.propertyId));
 
   const filteredInspections = inspectionsToShow.filter(i => {
     const property = properties.find(p => p.id === i.propertyId);
@@ -178,6 +181,13 @@ const InspectionHistory = () => {
                               {property?.name}
                             </h3>
                             <p className="text-sm text-muted-foreground">
+
+                              {inspection.type === 'entrada' ? 
+                                <CircleCheckBig className="h-4 w-4 text-green-500 inline mr-2" /> 
+                                : 
+                                <CircleMinus className="h-4 w-4 text-red-500 inline mr-2" />
+                              }
+                              
                               Vistoria de {inspection.type === 'entrada' ? 'Entrada' : 'Saída'}
                             </p>
                           </div>
@@ -192,7 +202,7 @@ const InspectionHistory = () => {
 
                           <div className="flex items-center gap-2">
                             <Home className="h-4 w-4 text-muted-foreground" />
-                            Contrato #{inspection.contractId.slice(-6)}
+                            Contrato #{inspection.propertyId.slice(-6)}
                           </div>
                         </div>
 
@@ -208,7 +218,7 @@ const InspectionHistory = () => {
 
                           <Button
                             size="sm"
-                            onClick={() => navigate(`/inspection/${inspection.contractId}`)}
+                            onClick={() => navigate(`/inspection/${inspection.id}`)}
                           >
                             Abrir vistoria
                           </Button>
