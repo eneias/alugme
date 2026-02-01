@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Calendar, User, Home, Eye, ClipboardCheck, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Calendar, User, Home, Eye, ClipboardCheck, CheckCircle2, Clock, AlertCircle, Camera, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { rentals, Rental, rentalContracts, landlords, getContractSignedDate } from '@/data/landlords';
 import { properties } from '@/data/properties';
@@ -60,18 +61,58 @@ const formatSignatureDate = (contract: typeof rentalContracts[0]) => {
   return 'Não assinado';
 };
 
-const getInspectionStatusIcon = (inspection: Inspection | undefined, type: 'entrada' | 'saida') => {
+const getInspectionStatusBadge = (status: Inspection['status']) => {
+  switch (status) {
+    case 'completed':
+      return <Badge className="bg-green-500">Concluída</Badge>;
+    case 'pending_tenant':
+      return <Badge variant="outline" className="text-yellow-600 border-yellow-600">Aguardando Locatário</Badge>;
+    case 'pending_landlord':
+      return <Badge variant="outline" className="text-orange-600 border-orange-600">Aguardando Locador</Badge>;
+    case 'disputed':
+      return <Badge variant="destructive">Em Divergência</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+interface InspectionStatusProps {
+  inspection: Inspection | undefined;
+  type: 'entrada' | 'saida';
+  contractId: string;
+  onViewInspection: (inspection: Inspection) => void;
+  onCreateInspection: (contractId: string, type: 'entrada' | 'saida') => void;
+}
+
+const InspectionStatusIndicator = ({ 
+  inspection, 
+  type, 
+  contractId, 
+  onViewInspection, 
+  onCreateInspection 
+}: InspectionStatusProps) => {
+  const handleClick = () => {
+    if (inspection) {
+      onViewInspection(inspection);
+    } else {
+      onCreateInspection(contractId, type);
+    }
+  };
+
   if (!inspection) {
     return (
       <Tooltip>
-        <TooltipTrigger>
-          <div className="flex items-center gap-1 text-muted-foreground">
+        <TooltipTrigger asChild>
+          <button 
+            onClick={handleClick}
+            className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          >
             <AlertCircle className="h-4 w-4" />
-            <span className="text-xs">Pendente</span>
-          </div>
+            <span className="text-xs underline-offset-2 hover:underline">Pendente</span>
+          </button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Vistoria de {type} não realizada</p>
+          <p>Clique para criar vistoria de {type}</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -80,14 +121,17 @@ const getInspectionStatusIcon = (inspection: Inspection | undefined, type: 'entr
   if (inspection.status === 'completed') {
     return (
       <Tooltip>
-        <TooltipTrigger>
-          <div className="flex items-center gap-1 text-green-600">
+        <TooltipTrigger asChild>
+          <button 
+            onClick={handleClick}
+            className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors cursor-pointer"
+          >
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-xs">Concluída</span>
-          </div>
+            <span className="text-xs underline-offset-2 hover:underline">Concluída</span>
+          </button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Vistoria de {type} concluída e assinada</p>
+          <p>Clique para ver vistoria de {type}</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -96,14 +140,17 @@ const getInspectionStatusIcon = (inspection: Inspection | undefined, type: 'entr
   if (inspection.status === 'disputed') {
     return (
       <Tooltip>
-        <TooltipTrigger>
-          <div className="flex items-center gap-1 text-destructive">
+        <TooltipTrigger asChild>
+          <button 
+            onClick={handleClick}
+            className="flex items-center gap-1 text-destructive hover:text-destructive/80 transition-colors cursor-pointer"
+          >
             <AlertCircle className="h-4 w-4" />
-            <span className="text-xs">Divergência</span>
-          </div>
+            <span className="text-xs underline-offset-2 hover:underline">Divergência</span>
+          </button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Vistoria de {type} com divergência</p>
+          <p>Clique para ver vistoria de {type} em divergência</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -111,14 +158,17 @@ const getInspectionStatusIcon = (inspection: Inspection | undefined, type: 'entr
 
   return (
     <Tooltip>
-      <TooltipTrigger>
-        <div className="flex items-center gap-1 text-yellow-600">
+      <TooltipTrigger asChild>
+        <button 
+          onClick={handleClick}
+          className="flex items-center gap-1 text-yellow-600 hover:text-yellow-700 transition-colors cursor-pointer"
+        >
           <Clock className="h-4 w-4" />
-          <span className="text-xs">Aguardando</span>
-        </div>
+          <span className="text-xs underline-offset-2 hover:underline">Aguardando</span>
+        </button>
       </TooltipTrigger>
       <TooltipContent>
-        <p>Vistoria de {type} aguardando assinatura</p>
+        <p>Clique para ver vistoria de {type} aguardando assinatura</p>
       </TooltipContent>
     </Tooltip>
   );
@@ -128,6 +178,7 @@ const RentalHistory = () => {
   const navigate = useNavigate();
   
   const [selectedContract, setSelectedContract] = useState<typeof rentalContracts[0] | null>(null);
+  const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -154,6 +205,14 @@ const RentalHistory = () => {
 
   const goToProperty = (propertyId: string) => {
     navigate(`/property/${propertyId}`);
+  };
+
+  const handleViewInspection = (inspection: Inspection) => {
+    setSelectedInspection(inspection);
+  };
+
+  const handleCreateInspection = (contractId: string, type: 'entrada' | 'saida') => {
+    navigate(`/landlord/inspection-create?contractId=${contractId}&type=${type}`);
   };
 
   return (
@@ -282,11 +341,23 @@ const RentalHistory = () => {
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-1">
                                 <span className="text-xs text-muted-foreground">Entrada:</span>
-                                {getInspectionStatusIcon(entradaInspection, 'entrada')}
+                                <InspectionStatusIndicator
+                                  inspection={entradaInspection}
+                                  type="entrada"
+                                  contractId={rental.contracts[0].id}
+                                  onViewInspection={handleViewInspection}
+                                  onCreateInspection={handleCreateInspection}
+                                />
                               </div>
                               <div className="flex items-center gap-1">
                                 <span className="text-xs text-muted-foreground">Saída:</span>
-                                {getInspectionStatusIcon(saidaInspection, 'saida')}
+                                <InspectionStatusIndicator
+                                  inspection={saidaInspection}
+                                  type="saida"
+                                  contractId={rental.contracts[0].id}
+                                  onViewInspection={handleViewInspection}
+                                  onCreateInspection={handleCreateInspection}
+                                />
                               </div>
                             </div>
                           </div>
@@ -398,6 +469,140 @@ const RentalHistory = () => {
                   >
                     <ClipboardCheck className="h-4 w-4 mr-2" />
                     Registrar Vistoria
+                  </Button>
+                  <Button onClick={() => window.print()}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Imprimir
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal da Vistoria */}
+        <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5" />
+                Vistoria de {selectedInspection?.type === 'entrada' ? 'Entrada' : 'Saída'}
+              </DialogTitle>
+              <DialogDescription>
+                Detalhes da vistoria realizada no imóvel
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedInspection && (
+              <div className="space-y-6">
+                {/* Info básica */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">ID da Vistoria</p>
+                    <p className="font-medium">{selectedInspection.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    {getInspectionStatusBadge(selectedInspection.status)}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Data de Criação</p>
+                    <p className="font-medium">{formatDate(selectedInspection.createdAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tipo</p>
+                    <Badge variant="outline">
+                      {selectedInspection.type === 'entrada' ? 'Entrada' : 'Saída'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Descrição */}
+                <div className="space-y-2">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Descrição Geral
+                  </h4>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
+                    {selectedInspection.generalDescription}
+                  </p>
+                </div>
+
+                {selectedInspection.observations && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Observações</h4>
+                    <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
+                      {selectedInspection.observations}
+                    </p>
+                  </div>
+                )}
+
+                {/* Fotos */}
+                {selectedInspection.photos.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Camera className="h-4 w-4" />
+                      Fotos ({selectedInspection.photos.length})
+                    </h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedInspection.photos.map(photo => (
+                        <div key={photo.id} className="relative group">
+                          <img
+                            src={photo.url}
+                            alt={photo.description}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center p-2">
+                            <div className="text-center text-white text-xs">
+                              <p className="font-medium">{photo.room}</p>
+                              <p className="line-clamp-2">{photo.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assinaturas */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-primary/5 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura do Locador</p>
+                    {selectedInspection.signatures.landlord ? (
+                      <div>
+                        <p className="font-medium text-green-600">✓ Assinado</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(selectedInspection.signatures.landlord.signedAt).toLocaleString('pt-BR')}
+                        </p>
+                        {selectedInspection.signatures.landlord.ip && (
+                          <p className="text-xs text-muted-foreground">IP: {selectedInspection.signatures.landlord.ip}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-yellow-600">Pendente</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura do Locatário</p>
+                    {selectedInspection.signatures.tenant ? (
+                      <div>
+                        <p className="font-medium text-green-600">✓ Assinado</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(selectedInspection.signatures.tenant.signedAt).toLocaleString('pt-BR')}
+                        </p>
+                        {selectedInspection.signatures.tenant.ip && (
+                          <p className="text-xs text-muted-foreground">IP: {selectedInspection.signatures.tenant.ip}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-yellow-600">Pendente</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSelectedInspection(null)}>
+                    Fechar
                   </Button>
                   <Button onClick={() => window.print()}>
                     <FileText className="h-4 w-4 mr-2" />
