@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Calendar, User, Home, Eye, ClipboardCheck, CheckCircle2, Clock, AlertCircle, Camera, MapPin, X } from 'lucide-react';
+import { FileText, Calendar, User, Home, Eye, ClipboardCheck, CheckCircle2, Clock, AlertCircle, Camera, MapPin, X, CircleCheckBig, CircleMinus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -485,7 +485,12 @@ const RentalHistory = () => {
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5" />
+                {selectedInspection?.type === 'entrada' ? 
+                  <CircleCheckBig className="h-5 w-5 text-green-500 inline mr-2" /> 
+                  : 
+                  <CircleMinus className="h-5 w-5 text-red-500 inline mr-2" />
+                }
+
                 Vistoria de {selectedInspection?.type === 'entrada' ? 'Entrada' : 'Saída'}
               </DialogTitle>
               <DialogDescription>

@@ -9,7 +9,9 @@ import {
   AlertTriangle,
   Clock,
   CircleCheckBig,
-  CircleMinus
+  CircleMinus,
+  FileText,
+  Camera
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +28,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -33,7 +36,7 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-import { mockInspections } from '@/data/inspections';
+import { Inspection, mockInspections } from '@/data/inspections';
 import { rentalContracts, landlords, rentals } from '@/data/landlords';
 import { properties } from '@/data/properties';
 import { users } from '@/data/users';
@@ -79,6 +82,21 @@ const InspectionHistory = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  const getInspectionStatusBadge = (status: Inspection['status']) => {
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-green-500">Concluída</Badge>;
+      case 'pending_tenant':
+        return <Badge variant="outline" className="text-yellow-600 border-yellow-600">Aguardando Locatário</Badge>;
+      case 'pending_landlord':
+        return <Badge variant="outline" className="text-orange-600 border-orange-600">Aguardando Locador</Badge>;
+      case 'disputed':
+        return <Badge variant="destructive">Em Divergência</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString('pt-BR');
@@ -234,27 +252,139 @@ const InspectionHistory = () => {
 
         {/* Modal resumo */}
         <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Resumo da Vistoria</DialogTitle>
-            </DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
 
+                {selectedInspection?.type === 'entrada' ? 
+                  <CircleCheckBig className="h-5 w-5 text-green-500 inline mr-2" /> 
+                  : 
+                  <CircleMinus className="h-5 w-5 text-red-500 inline mr-2" />
+                }
+
+                Vistoria de {selectedInspection?.type === 'entrada' ? 'Entrada' : 'Saída'}
+              </DialogTitle>
+              <DialogDescription>
+                Detalhes da vistoria realizada no imóvel
+              </DialogDescription>
+            </DialogHeader>
+            
             {selectedInspection && (
-              <div className="space-y-4 text-sm">
-                <p><b>Tipo:</b> {selectedInspection.type}</p>
-                <p><b>Status:</b> {getStatusBadge(selectedInspection.status)}</p>
-                <p><b>Descrição geral:</b></p>
-                <p className="p-3 rounded bg-muted">
-                  {selectedInspection.generalDescription}
-                </p>
+              <div className="space-y-6">
+                {/* Info básica */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">ID da Vistoria</p>
+                    <p className="font-medium">{selectedInspection.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    {getInspectionStatusBadge(selectedInspection.status)}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Data de Criação</p>
+                    <p className="font-medium">{formatDate(selectedInspection.createdAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tipo</p>
+                    <Badge variant="outline">
+                      {selectedInspection.type === 'entrada' ? 'Entrada' : 'Saída'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Descrição */}
+                <div className="space-y-2">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Descrição Geral
+                  </h4>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
+                    {selectedInspection.generalDescription}
+                  </p>
+                </div>
+
                 {selectedInspection.observations && (
-                  <>
-                    <p><b>Observações:</b></p>
-                    <p className="p-3 rounded bg-muted">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Observações</h4>
+                    <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
                       {selectedInspection.observations}
                     </p>
-                  </>
+                  </div>
                 )}
+
+                {/* Fotos */}
+                {selectedInspection.photos.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Camera className="h-4 w-4" />
+                      Fotos ({selectedInspection.photos.length})
+                    </h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedInspection.photos.map(photo => (
+                        <div key={photo.id} className="relative group">
+                          <img
+                            src={photo.url}
+                            alt={photo.description}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center p-2">
+                            <div className="text-center text-white text-xs">
+                              <p className="font-medium">{photo.room}</p>
+                              <p className="line-clamp-2">{photo.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assinaturas */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-primary/5 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura do Locador</p>
+                    {selectedInspection.signatures.landlord ? (
+                      <div>
+                        <p className="font-medium text-green-600">✓ Assinado</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(selectedInspection.signatures.landlord.signedAt).toLocaleString('pt-BR')}
+                        </p>
+                        {selectedInspection.signatures.landlord.ip && (
+                          <p className="text-xs text-muted-foreground">IP: {selectedInspection.signatures.landlord.ip}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-yellow-600">Pendente</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura do Locatário</p>
+                    {selectedInspection.signatures.tenant ? (
+                      <div>
+                        <p className="font-medium text-green-600">✓ Assinado</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(selectedInspection.signatures.tenant.signedAt).toLocaleString('pt-BR')}
+                        </p>
+                        {selectedInspection.signatures.tenant.ip && (
+                          <p className="text-xs text-muted-foreground">IP: {selectedInspection.signatures.tenant.ip}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-yellow-600">Pendente</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSelectedInspection(null)}>
+                    Fechar
+                  </Button>
+                  <Button onClick={() => window.print()}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Imprimir
+                  </Button>
+                </div>
               </div>
             )}
           </DialogContent>
