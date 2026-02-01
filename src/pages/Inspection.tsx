@@ -303,110 +303,121 @@ const Inspection = () => {
               </Button>
             </div>
 
-            {/* Inspection Document */}
-            <div className="p-8 md:p-12 rounded-2xl bg-card border border-border/50 shadow-elevated print:shadow-none">
-              <div className="flex justify-between items-start mb-8">
+            {/* Inspection Document - Same layout as RentalHistory modal */}
+            <div className="p-6 md:p-8 rounded-2xl bg-card border border-border/50 shadow-elevated print:shadow-none space-y-6">
+              {/* Info básica */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <h1 className="font-display text-3xl font-bold mb-2">TERMO DE VISTORIA</h1>
-                  <p className="text-muted-foreground">
-                    Vistoria de {existingInspection.type === 'entrada' ? 'Entrada' : 'Saída'} - 
-                    Contrato nº {contract.id.slice(-8).toUpperCase()}
-                  </p>
+                  <p className="text-sm text-muted-foreground">ID da Vistoria</p>
+                  <p className="font-medium">{existingInspection.id}</p>
                 </div>
-                {getStatusBadge(existingInspection.status)}
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  {getStatusBadge(existingInspection.status)}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data de Criação</p>
+                  <p className="font-medium">{formatDateTime(existingInspection.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Tipo</p>
+                  <Badge variant="outline">
+                    {existingInspection.type === 'entrada' ? 'Entrada' : 'Saída'}
+                  </Badge>
+                </div>
               </div>
 
-              {/* Property Info */}
-              <div className="p-6 rounded-xl bg-secondary/30 border border-border mb-8">
-                <h3 className="font-semibold mb-3">Imóvel</h3>
-                <p className="font-medium text-lg">{property.name}</p>
-                <p className="text-muted-foreground">{property.address}, {property.neighborhood} - {property.city}</p>
+              {/* Descrição */}
+              <div className="space-y-2">
+                <h4 className="font-medium flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  Descrição Geral
+                </h4>
+                <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
+                  {existingInspection.generalDescription}
+                </p>
               </div>
 
-              {/* General Description */}
-              <div className="mb-8">
-                <h3 className="font-display text-xl font-semibold mb-4">Estado Geral do Imóvel</h3>
-                <p className="text-foreground leading-relaxed">{existingInspection.generalDescription}</p>
-              </div>
-
-              {/* Observations */}
               {existingInspection.observations && (
-                <div className="mb-8">
-                  <h3 className="font-display text-xl font-semibold mb-4">Observações Adicionais</h3>
-                  <p className="text-foreground leading-relaxed">{existingInspection.observations}</p>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Observações</h4>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
+                    {existingInspection.observations}
+                  </p>
                 </div>
               )}
 
-              {/* Photos */}
-              <div className="mb-8">
-                <h3 className="font-display text-xl font-semibold mb-4">Registro Fotográfico ({existingInspection.photos.length} fotos)</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {existingInspection.photos.map((photo) => (
-                    <div key={photo.id} className="rounded-xl overflow-hidden border border-border">
-                      <img src={photo.url} alt={photo.description} className="w-full h-40 object-cover" />
-                      <div className="p-3 bg-secondary/30">
-                        <p className="text-sm font-medium">{photo.room}</p>
-                        <p className="text-xs text-muted-foreground">{photo.description}</p>
+              {/* Fotos */}
+              {existingInspection.photos.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Camera className="h-4 w-4" />
+                    Fotos ({existingInspection.photos.length})
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {existingInspection.photos.map(photo => (
+                      <div key={photo.id} className="relative group">
+                        <img
+                          src={photo.url}
+                          alt={photo.description}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center p-2">
+                          <div className="text-center text-white text-xs">
+                            <p className="font-medium">{photo.room}</p>
+                            <p className="line-clamp-2">{photo.description}</p>
+                          </div>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Assinaturas */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-primary/5 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Assinatura do Locador</p>
+                  {existingInspection.signatures.landlord ? (
+                    <div>
+                      <p className="font-medium text-green-600">✓ Assinado</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(existingInspection.signatures.landlord.signedAt).toLocaleString('pt-BR')}
+                      </p>
+                      {existingInspection.signatures.landlord.ip && (
+                        <p className="text-xs text-muted-foreground">IP: {existingInspection.signatures.landlord.ip}</p>
+                      )}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-yellow-600">Pendente</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Assinatura do Locatário</p>
+                  {existingInspection.signatures.tenant ? (
+                    <div>
+                      <p className="font-medium text-green-600">✓ Assinado</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(existingInspection.signatures.tenant.signedAt).toLocaleString('pt-BR')}
+                      </p>
+                      {existingInspection.signatures.tenant.ip && (
+                        <p className="text-xs text-muted-foreground">IP: {existingInspection.signatures.tenant.ip}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-yellow-600">Pendente</p>
+                  )}
                 </div>
               </div>
 
-              {/* Signatures */}
-              <div className="border-t border-border pt-8">
-                <h3 className="font-display text-xl font-semibold mb-6">Assinaturas Eletrônicas</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                {existingInspection.signatures.landlord ? (
-                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="font-medium text-green-600">Locador</span>
-                    </div>
-                    <p className="font-semibold">
-                      Usuário #{existingInspection.signatures.landlord.userId}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Assinado em: {formatDateTime(existingInspection.signatures.landlord.signedAt)}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-4 w-4 text-yellow-600" />
-                      <span className="font-medium text-yellow-600">Locador</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
-                  </div>
-                )}
-
-                {existingInspection.signatures.tenant ? (
-                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="font-medium text-green-600">Locador</span>
-                    </div>
-                    <p className="font-semibold">
-                      Usuário #{existingInspection.signatures.tenant.userId}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Assinado em: {formatDateTime(existingInspection.signatures.tenant.signedAt)}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-4 w-4 text-yellow-600" />
-                      <span className="font-medium text-yellow-600">Locador</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Aguardando assinatura</p>
-                  </div>
-                )}
-                </div>
-
-                <p className="text-xs text-muted-foreground mt-6 text-center">
-                  Este documento foi assinado eletronicamente conforme Medida Provisória nº 2.200-2/2001 e possui validade jurídica.
-                </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => navigate(-1)}>
+                  Fechar
+                </Button>
+                <Button onClick={() => window.print()}>
+                  <FileCheck className="h-4 w-4 mr-2" />
+                  Imprimir
+                </Button>
               </div>
             </div>
           </motion.div>
