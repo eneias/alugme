@@ -90,7 +90,6 @@ const CreateInspection = () => {
 
     mockInspections.push({
       id: crypto.randomUUID(),
-      contractId,
       propertyId: selectedContract!.propertyId,
 
       type,

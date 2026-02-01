@@ -149,8 +149,8 @@ export const properties: Property[] = [
       "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800"
     ],
     coordinates: { lat: -12.9730, lng: -38.5108 },
-    landlordId: undefined,
-    bankAccountId: undefined,
+    landlordId: "landlord-1",
+    bankAccountId: 'bank-1',
     availability: 'available'
   },
   {

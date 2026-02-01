@@ -19,8 +19,8 @@ import Footer from '@/components/Footer';
 
 
 // Helper para obter vistorias de um contrato
-const getContractInspections = (contractId: string) => {
-  return mockInspections.filter(i => i.contractId === contractId);
+const getContractInspections = (propertyId: string) => {
+  return mockInspections.filter(i => i.propertyId == propertyId);
 };
 
 
@@ -108,7 +108,7 @@ const InspectionStatusIndicator = ({
             className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
           >
             <AlertCircle className="h-4 w-4" />
-            <span className="text-xs underline-offset-2 hover:underline">Pendente</span>
+            <span className="text-xs underline-offset-2 hover:underline">Não realizada</span>
           </button>
         </TooltipTrigger>
         <TooltipContent>
@@ -277,7 +277,7 @@ const RentalHistory = () => {
             {myRentals.map(rental => {
               const property = properties.find(p => p.id === rental.propertyId);
               const tenant =  rental.contracts[0]?.tenantName || rental.tenantId;
-              const contractInspections = getContractInspections(rental.contracts[0].id);
+              const contractInspections = getContractInspections(rental.propertyId);
               const entradaInspection = contractInspections.find(i => i.type === 'entrada');
               const saidaInspection = contractInspections.find(i => i.type === 'saida');
 
