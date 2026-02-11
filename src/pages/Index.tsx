@@ -5,21 +5,20 @@ import Footer from "@/components/Footer";
 import BannerCarousel from "@/components/BannerCarousel";
 import PropertyCard from "@/components/PropertyCard";
 import FilterBar from "@/components/FilterBar";
-import { properties } from "@/data/properties";
+import { useProperties } from "@/hooks/useProperties";
 
 const Index = () => {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("all");
   const [sortBy, setSortBy] = useState("default");
+  const { data: properties = [], isLoading } = useProperties();
 
   const filteredProperties = useMemo(() => {
     let result = [...properties];
 
-    // Filter by neighborhood
     if (selectedNeighborhood !== "all") {
       result = result.filter((p) => p.neighborhood === selectedNeighborhood);
     }
 
-    // Sort
     switch (sortBy) {
       case "rating-desc":
         result.sort((a, b) => b.rating - a.rating);
@@ -44,16 +43,13 @@ const Index = () => {
     }
 
     return result;
-  }, [selectedNeighborhood, sortBy]);
+  }, [properties, selectedNeighborhood, sortBy]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      {/* Banner Carousel */}
       <BannerCarousel />
 
-      {/* Properties Section */}
       <section className="py-12 px-4">
         <div className="container">
           <FilterBar
@@ -70,8 +66,14 @@ const Index = () => {
             className="mt-8 mb-6 flex items-center justify-between"
           >
             <p className="text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProperties.length}</span>{" "}
-              imóveis encontrados
+              {isLoading ? (
+                "Carregando..."
+              ) : (
+                <>
+                  <span className="font-semibold text-foreground">{filteredProperties.length}</span>{" "}
+                  imóveis encontrados
+                </>
+              )}
             </p>
           </motion.div>
 
@@ -81,7 +83,7 @@ const Index = () => {
             ))}
           </div>
 
-          {filteredProperties.length === 0 && (
+          {!isLoading && filteredProperties.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

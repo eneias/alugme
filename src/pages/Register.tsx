@@ -8,20 +8,22 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
-import { UserType } from '@/data/users';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    type: 'locatario' as UserType,
+    type: 'locatario' as AppRole,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -34,9 +36,23 @@ const Register = () => {
       return;
     }
 
-    // Simulating registration (PoC)
-    toast.success('Cadastro realizado com sucesso!');
-    navigate('/');
+    setIsLoading(true);
+
+    const { error } = await signUp(formData.email, formData.password, {
+      name: formData.name,
+      phone: formData.phone,
+      role: formData.type,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    toast.success('Cadastro realizado! Verifique seu email para confirmar a conta.');
+    navigate('/login');
+    setIsLoading(false);
   };
 
   return (
@@ -143,7 +159,7 @@ const Register = () => {
                 <Label className="mb-3 block">Tipo de Usuário</Label>
                 <RadioGroup
                   value={formData.type}
-                  onValueChange={(value: UserType) => setFormData({ ...formData, type: value })}
+                  onValueChange={(value: string) => setFormData({ ...formData, type: value as AppRole })}
                   className="grid grid-cols-2 gap-4"
                 >
                   <Label
@@ -180,8 +196,15 @@ const Register = () => {
                 </RadioGroup>
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Criar Conta
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Cadastrando...
+                  </span>
+                ) : (
+                  'Criar Conta'
+                )}
               </Button>
             </form>
 

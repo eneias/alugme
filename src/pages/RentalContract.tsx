@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { properties } from "@/data/properties";
-import { users } from "@/data/users";
+import { useProperty } from "@/hooks/useProperties";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContractFormData {
@@ -30,13 +30,13 @@ const RentalContract = () => {
   const [contractData, setContractData] = useState<ContractFormData | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const { data: property, isLoading } = useProperty(id);
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<ContractFormData>();
 
-  // Verificar se usuário está logado e preencher dados
   useEffect(() => {
-    const loggedUserId = localStorage.getItem("loggedUserId");
-    if (!loggedUserId) {
+    if (!user) {
       toast({
         title: "Faça login para continuar",
         description: "Você precisa estar logado para alugar um imóvel.",
@@ -46,15 +46,23 @@ const RentalContract = () => {
       return;
     }
 
-    const user = users.find(u => u.id === loggedUserId);
-    if (user) {
-      setValue("fullName", user.name);
-      setValue("email", user.email);
-      setValue("phone", user.phone);
+    if (profile) {
+      setValue("fullName", profile.name);
+      setValue("email", profile.email);
+      if (profile.phone) setValue("phone", profile.phone);
     }
-  }, [navigate, id, setValue, toast]);
+  }, [user, profile, navigate, id, setValue, toast]);
 
-  const property = properties.find((p) => p.id === id);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-20 text-center">
+          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+        </div>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -92,7 +100,6 @@ const RentalContract = () => {
       <Header />
 
       <div className="container py-8 max-w-4xl">
-        {/* Back button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -107,7 +114,6 @@ const RentalContract = () => {
           </Link>
         </motion.div>
 
-        {/* Progress */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,7 +144,6 @@ const RentalContract = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            {/* Property Summary */}
             <div className="p-6 rounded-2xl bg-card border border-border/50 shadow-card mb-8">
               <div className="flex gap-4">
                 <img 
@@ -154,7 +159,6 @@ const RentalContract = () => {
               </div>
             </div>
 
-            {/* Form */}
             <div className="p-8 rounded-2xl bg-card border border-border/50 shadow-card">
               <div className="flex items-center gap-3 mb-8">
                 <div className="h-12 w-12 rounded-xl gradient-hero flex items-center justify-center">
@@ -170,81 +174,38 @@ const RentalContract = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Nome completo *</Label>
-                    <Input 
-                      id="fullName" 
-                      {...register("fullName", { required: "Nome é obrigatório" })}
-                      placeholder="Seu nome completo"
-                    />
-                    {errors.fullName && (
-                      <p className="text-sm text-destructive">{errors.fullName.message}</p>
-                    )}
+                    <Input id="fullName" {...register("fullName", { required: "Nome é obrigatório" })} placeholder="Seu nome completo" />
+                    {errors.fullName && <p className="text-sm text-destructive">{errors.fullName.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cpf">CPF *</Label>
-                    <Input 
-                      id="cpf" 
-                      {...register("cpf", { required: "CPF é obrigatório" })}
-                      placeholder="000.000.000-00"
-                    />
-                    {errors.cpf && (
-                      <p className="text-sm text-destructive">{errors.cpf.message}</p>
-                    )}
+                    <Input id="cpf" {...register("cpf", { required: "CPF é obrigatório" })} placeholder="000.000.000-00" />
+                    {errors.cpf && <p className="text-sm text-destructive">{errors.cpf.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="rg">RG *</Label>
-                    <Input 
-                      id="rg" 
-                      {...register("rg", { required: "RG é obrigatório" })}
-                      placeholder="00.000.000-0"
-                    />
-                    {errors.rg && (
-                      <p className="text-sm text-destructive">{errors.rg.message}</p>
-                    )}
+                    <Input id="rg" {...register("rg", { required: "RG é obrigatório" })} placeholder="00.000.000-0" />
+                    {errors.rg && <p className="text-sm text-destructive">{errors.rg.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">E-mail *</Label>
-                    <Input 
-                      id="email" 
-                      type="email"
-                      {...register("email", { required: "E-mail é obrigatório" })}
-                      placeholder="seu@email.com"
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email.message}</p>
-                    )}
+                    <Input id="email" type="email" {...register("email", { required: "E-mail é obrigatório" })} placeholder="seu@email.com" />
+                    {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone *</Label>
-                    <Input 
-                      id="phone" 
-                      {...register("phone", { required: "Telefone é obrigatório" })}
-                      placeholder="(00) 00000-0000"
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone.message}</p>
-                    )}
+                    <Input id="phone" {...register("phone", { required: "Telefone é obrigatório" })} placeholder="(00) 00000-0000" />
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Endereço atual *</Label>
-                    <Input 
-                      id="address" 
-                      {...register("address", { required: "Endereço é obrigatório" })}
-                      placeholder="Seu endereço completo"
-                    />
-                    {errors.address && (
-                      <p className="text-sm text-destructive">{errors.address.message}</p>
-                    )}
+                    <Input id="address" {...register("address", { required: "Endereço é obrigatório" })} placeholder="Seu endereço completo" />
+                    {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="startDate">Data de início *</Label>
-                    <Input 
-                      id="startDate" 
-                      type="date"
-                      {...register("startDate", { required: "Data é obrigatória" })}
-                    />
-                    {errors.startDate && (
-                      <p className="text-sm text-destructive">{errors.startDate.message}</p>
-                    )}
+                    <Input id="startDate" type="date" {...register("startDate", { required: "Data é obrigatória" })} />
+                    {errors.startDate && <p className="text-sm text-destructive">{errors.startDate.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="duration">Duração do contrato *</Label>
@@ -258,9 +219,7 @@ const RentalContract = () => {
                       <option value="24">24 meses</option>
                       <option value="36">36 meses</option>
                     </select>
-                    {errors.duration && (
-                      <p className="text-sm text-destructive">{errors.duration.message}</p>
-                    )}
+                    {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
                   </div>
                 </div>
 
@@ -270,10 +229,7 @@ const RentalContract = () => {
                     checked={acceptedTerms}
                     onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
                   />
-                  <label
-                    htmlFor="terms"
-                    className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
+                  <label htmlFor="terms" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Concordo com os termos e condições do contrato de locação
                   </label>
                 </div>
@@ -294,7 +250,6 @@ const RentalContract = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            {/* Action buttons */}
             <div className="flex gap-4 mb-8">
               <Button variant="outline" className="gap-2" onClick={() => window.print()}>
                 <Printer className="h-4 w-4" />
@@ -306,7 +261,6 @@ const RentalContract = () => {
               </Button>
             </div>
 
-            {/* Contract */}
             <div className="p-8 md:p-12 rounded-2xl bg-card border border-border/50 shadow-elevated print:shadow-none">
               <div className="text-center mb-12">
                 <h1 className="font-display text-3xl font-bold mb-2">CONTRATO DE LOCAÇÃO RESIDENCIAL</h1>
@@ -322,48 +276,23 @@ const RentalContract = () => {
 
                 <div className="p-6 rounded-xl bg-secondary/30 border border-border">
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nome completo</p>
-                      <p className="font-semibold">{contractData?.fullName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">CPF</p>
-                      <p className="font-semibold">{contractData?.cpf}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">RG</p>
-                      <p className="font-semibold">{contractData?.rg}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">E-mail</p>
-                      <p className="font-semibold">{contractData?.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Telefone</p>
-                      <p className="font-semibold">{contractData?.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Endereço atual</p>
-                      <p className="font-semibold">{contractData?.address}</p>
-                    </div>
+                    <div><p className="text-sm text-muted-foreground">Nome completo</p><p className="font-semibold">{contractData?.fullName}</p></div>
+                    <div><p className="text-sm text-muted-foreground">CPF</p><p className="font-semibold">{contractData?.cpf}</p></div>
+                    <div><p className="text-sm text-muted-foreground">RG</p><p className="font-semibold">{contractData?.rg}</p></div>
+                    <div><p className="text-sm text-muted-foreground">E-mail</p><p className="font-semibold">{contractData?.email}</p></div>
+                    <div><p className="text-sm text-muted-foreground">Telefone</p><p className="font-semibold">{contractData?.phone}</p></div>
+                    <div><p className="text-sm text-muted-foreground">Endereço atual</p><p className="font-semibold">{contractData?.address}</p></div>
                   </div>
                 </div>
 
-                <p>
-                  Têm entre si justo e contratado o seguinte:
-                </p>
+                <p>Têm entre si justo e contratado o seguinte:</p>
 
                 <h2 className="font-display text-xl font-semibold pt-4">CLÁUSULA PRIMEIRA - DO OBJETO</h2>
-                <p>
-                  O presente contrato tem como objeto a locação do imóvel situado em:
-                </p>
+                <p>O presente contrato tem como objeto a locação do imóvel situado em:</p>
                 <div className="p-6 rounded-xl bg-secondary/30 border border-border">
                   <p className="font-semibold text-lg">{property.name}</p>
                   <p className="text-muted-foreground">{property.address}, {property.neighborhood} - {property.city}</p>
-                  <p className="mt-2">
-                    Contendo {property.bedrooms} quarto(s), {property.bathrooms} banheiro(s), 
-                    área total de {property.area}m².
-                  </p>
+                  <p className="mt-2">Contendo {property.bedrooms} quarto(s), {property.bathrooms} banheiro(s), área total de {property.area}m².</p>
                 </div>
 
                 <h2 className="font-display text-xl font-semibold pt-4">CLÁUSULA SEGUNDA - DO PRAZO</h2>
@@ -377,97 +306,59 @@ const RentalContract = () => {
                         new Date(contractData.startDate).getMonth() + parseInt(contractData.duration || "12")
                       )).toISOString()
                     )}
-                  </strong>, 
-                  data em que o(a) LOCATÁRIO(A) se obriga a restituir o imóvel completamente desocupado, 
-                  nas mesmas condições em que o recebeu.
+                  </strong>.
                 </p>
 
                 <h2 className="font-display text-xl font-semibold pt-4">CLÁUSULA TERCEIRA - DO ALUGUEL</h2>
                 <p>
-                  O aluguel mensal é de <strong>R$ {property.price.toLocaleString('pt-BR')}</strong> (
-                  {property.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace('R$', '').trim()} reais), 
-                  que deverá ser pago até o dia 10 (dez) de cada mês, através de boleto bancário ou PIX.
+                  O aluguel mensal é de <strong>R$ {property.price.toLocaleString('pt-BR')}</strong>, 
+                  que deverá ser pago até o dia 10 (dez) de cada mês.
                 </p>
 
                 <h2 className="font-display text-xl font-semibold pt-4">CLÁUSULA QUARTA - DAS OBRIGAÇÕES</h2>
-                <p>
-                  O(A) LOCATÁRIO(A) obriga-se a:
-                </p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Pagar pontualmente o aluguel e demais encargos da locação;</li>
                   <li>Servir-se do imóvel para uso exclusivamente residencial;</li>
                   <li>Restituir o imóvel, finda a locação, no estado em que o recebeu;</li>
                   <li>Comunicar ao LOCADOR qualquer dano ou defeito cuja reparação a este incumba;</li>
-                  <li>Não modificar a forma externa ou interna do imóvel sem o consentimento prévio e por escrito do LOCADOR.</li>
+                  <li>Não modificar a forma interna ou externa do imóvel sem consentimento prévio.</li>
                 </ul>
 
-                <h2 className="font-display text-xl font-semibold pt-4">CLÁUSULA QUINTA - DO FORO</h2>
-                <p>
-                  Fica eleito o foro da Comarca de {property.city} para dirimir quaisquer dúvidas 
-                  oriundas do presente contrato.
-                </p>
+                <h2 className="font-display text-xl font-semibold pt-4">CLÁUSULA QUINTA - DA RESCISÃO</h2>
+                <p>O presente contrato poderá ser rescindido por qualquer das partes, mediante aviso prévio de 30 (trinta) dias, por escrito.</p>
 
-                <p className="pt-6">
-                  E por estarem assim justos e contratados, firmam o presente instrumento em 02 (duas) vias 
-                  de igual teor, juntamente com 02 (duas) testemunhas.
-                </p>
-
-                <p className="text-center pt-8">
-                  {property.city}, {today}
-                </p>
-
-                <div className="grid md:grid-cols-2 gap-12 pt-12">
-                  <div className="text-center">
-                    <div className="border-t border-foreground pt-4">
-                      <p className="font-semibold">LOCADOR(A)</p>
-                      <p className="text-sm text-muted-foreground">CasaFácil Imobiliária LTDA</p>
+                <div className="pt-8 mt-8 border-t border-border">
+                  <p className="text-center mb-12">{property.city}, {today}</p>
+                  <div className="grid md:grid-cols-2 gap-12">
+                    <div className="text-center">
+                      <div className="border-t border-foreground pt-2 mt-12">
+                        <p className="font-semibold">LOCADOR(A)</p>
+                        <p className="text-muted-foreground text-sm">CasaFácil Imobiliária LTDA</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="border-t border-foreground pt-4">
-                      <p className="font-semibold">LOCATÁRIO(A)</p>
-                      <p className="text-sm text-muted-foreground">{contractData?.fullName}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-12 pt-8">
-                  <div className="text-center">
-                    <div className="border-t border-foreground pt-4">
-                      <p className="text-sm text-muted-foreground">Testemunha 1</p>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="border-t border-foreground pt-4">
-                      <p className="text-sm text-muted-foreground">Testemunha 2</p>
+                    <div className="text-center">
+                      <div className="border-t border-foreground pt-2 mt-12">
+                        <p className="font-semibold">LOCATÁRIO(A)</p>
+                        <p className="text-muted-foreground text-sm">{contractData?.fullName}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 text-center">
-              <Button 
-                size="lg"
-                className="gradient-hero text-primary-foreground font-semibold text-lg h-14 px-12 rounded-xl shadow-card hover:shadow-card-hover transition-shadow"
-              >
-                <Check className="mr-2 h-5 w-5" />
+            <div className="flex gap-4 mt-8 justify-center">
+              <Button variant="outline" onClick={() => setStep("form")}>Voltar e Editar</Button>
+              <Button className="gradient-hero text-primary-foreground" onClick={() => {
+                toast({ title: "Contrato gerado!", description: "O contrato foi gerado com sucesso." });
+                navigate("/");
+              }}>
                 Confirmar e Enviar
               </Button>
-              <p className="text-sm text-muted-foreground mt-4">
-                Ao confirmar, você receberá uma cópia do contrato por e-mail
-              </p>
             </div>
           </motion.div>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-8 mt-12 print:hidden">
-        <div className="container text-center text-muted-foreground text-sm">
-          <p>© 2024 CasaFácil. Todos os direitos reservados.</p>
-        </div>
-      </footer>
     </div>
   );
 };

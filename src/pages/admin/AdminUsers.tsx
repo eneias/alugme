@@ -25,11 +25,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { users as initialUsers, User, UserType } from '@/data/users';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+type UserType = 'admin' | 'locador' | 'locatario';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  photo: string;
+  type: UserType;
+  status: boolean;
+  createdAt: string;
+  lastAccess: string;
+}
+
 const AdminUsers = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   
@@ -106,7 +121,6 @@ const AdminUsers = () => {
       photo: formData.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
       type: formData.type,
       status: formData.status,
-      password: formData.password || editingUser?.password || '123456',
       createdAt: editingUser?.createdAt || new Date().toISOString().split('T')[0],
       lastAccess: editingUser?.lastAccess || new Date().toISOString().split('T')[0],
     };

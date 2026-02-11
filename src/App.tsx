@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import PropertyDetails from "./pages/PropertyDetails";
 import RentalContract from "./pages/RentalContract";
@@ -36,63 +37,65 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter basename="">
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/property/:id" element={<PropertyDetails />} />
-          <Route path="/rent/:id" element={<RentalContract />} />
-          <Route path="/inspection/:id" element={<Inspection />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter basename="">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/property/:id" element={<PropertyDetails />} />
+            <Route path="/rent/:id" element={<RentalContract />} />
+            <Route path="/inspection/:id" element={<Inspection />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
 
-          <Route element={<ProtectedRoute allowedRoles={['admin', 'locador', 'locatario']} />}>
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/edit" element={<ProfileEdit />} />
-          </Route>
-          
-          {/* Landlord Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['locador']} />}>
-            <Route path="/landlord" element={<LandlordLayout />}>
-              <Route index element={<LandlordSetup />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="profile/edit" element={<ProfileEdit />} />
-              <Route path="bank-account" element={<BankAccount />} />
-              <Route path="properties" element={<MyProperties />} />
-              <Route path="rental-history" element={<RentalHistory />} />
-              <Route path="inspection-history" element={<InspectionHistory />} />
-              <Route path="contract-history" element={<ContractHistory />} />
-              <Route path="contract/:contractId" element={<ContractDetails />} />
-              <Route path="inspection-create" element={<CreateInspection />} />
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'locador', 'locatario']} />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/edit" element={<ProfileEdit />} />
             </Route>
-          </Route>
-          
-          {/* Tenant Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['locatario']} />}>
-            <Route index path="rental-history" element={<RentalHistory />} />
-          </Route>
-
-          {/* Admin Routes */}          
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="banners" element={<AdminBanners />} />
-              <Route path="properties" element={<AdminProperties />} />
-              <Route path="users" element={<AdminUsers />} />
+            
+            {/* Landlord Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['locador']} />}>
+              <Route path="/landlord" element={<LandlordLayout />}>
+                <Route index element={<LandlordSetup />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="profile/edit" element={<ProfileEdit />} />
+                <Route path="bank-account" element={<BankAccount />} />
+                <Route path="properties" element={<MyProperties />} />
+                <Route path="rental-history" element={<RentalHistory />} />
+                <Route path="inspection-history" element={<InspectionHistory />} />
+                <Route path="contract-history" element={<ContractHistory />} />
+                <Route path="contract/:contractId" element={<ContractDetails />} />
+                <Route path="inspection-create" element={<CreateInspection />} />
+              </Route>
             </Route>
-          </Route>
+            
+            {/* Tenant Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['locatario']} />}>
+              <Route index path="rental-history" element={<RentalHistory />} />
+            </Route>
 
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            {/* Admin Routes */}          
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="banners" element={<AdminBanners />} />
+                <Route path="properties" element={<AdminProperties />} />
+                <Route path="users" element={<AdminUsers />} />
+              </Route>
+            </Route>
+
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

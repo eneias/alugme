@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { users } from '@/data/users';
+import { useAuth, AppRole } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
-  allowedRoles: Array<'admin' | 'locador' | 'locatario'>;
+  allowedRoles: AppRole[];
   redirectTo?: string;
 }
 
@@ -10,23 +10,25 @@ const ProtectedRoute = ({
   allowedRoles,
   redirectTo = '/login',
 }: ProtectedRouteProps) => {
-  const loggedUserId = localStorage.getItem('loggedUserId');
+  const { user, roles, loading } = useAuth();
 
-  console.log('ProtectedRoute check, userId:', loggedUserId);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  // Não logado
-  if (!loggedUserId) {
+  if (!user) {
     return <Navigate to={redirectTo} replace />;
   }
 
-  const user = users.find(u => u.id === loggedUserId);
-
-  // Sem permissão
-  if (!user || !allowedRoles.includes(user.type)) {
+  const hasPermission = allowedRoles.some(role => roles.includes(role));
+  if (!hasPermission) {
     return <Navigate to="/" replace />;
   }
 
-  // Autorizado
   return <Outlet />;
 };
 
