@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin, Star, Bed, Bath, Maximize } from "lucide-react";
-import { Property } from "@/data/properties";
+import { Property } from "@/hooks/useProperties";
 import PropertyGallery from "./PropertyGallery";
 
 interface PropertyCardProps {

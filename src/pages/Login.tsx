@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { users } from "@/data/users";
+import { useAuth } from "@/contexts/AuthContext";
 import { LogIn } from "lucide-react";
 import logo from "@/assets/logo2.png";
 
@@ -13,59 +13,40 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // Pegar URL de redirecionamento se existir
   const redirectTo = (location.state as { redirectTo?: string })?.redirectTo;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular delay de autenticação
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const { error } = await signIn(email, password);
 
-    // Mock authentication - verificar se o usuário existe
-    const user = users.find(u => u.email === email && u.password === password);
-
-    if (user) {
-      if (!user.status) {
-        toast({
-          title: "Conta desativada",
-          description: "Sua conta está desativada. Entre em contato com o administrador.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Salvar sessão fake no localStorage
-      localStorage.setItem("loggedUserId", user.id);
-      localStorage.setItem("loggedUserType", user.type);
-      
-      toast({
-        title: "Login realizado com sucesso!",
-        description: `Bem-vindo(a), ${user.name}!`,
-      });
-
-      // Redirecionar: priorizar redirectTo, senão baseado no tipo de usuário
-      if (redirectTo) {
-        navigate(redirectTo);
-      } else if (user.type === "locador") {
-        navigate("/landlord");
-      } else if (user.type === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
-    } else {
+    if (error) {
       toast({
         title: "Erro no login",
-        description: "Email ou senha incorretos.",
+        description: error.message === 'Invalid login credentials'
+          ? "Email ou senha incorretos."
+          : error.message,
         variant: "destructive",
       });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Login realizado com sucesso!",
+      description: "Bem-vindo(a)!",
+    });
+
+    if (redirectTo) {
+      navigate(redirectTo);
+    } else {
+      navigate("/");
     }
 
     setIsLoading(false);
@@ -111,17 +92,6 @@ const Login = () => {
                   required
                 />
               </div>
-
-              <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                <p className="font-medium mb-2">Usuários de teste:</p>
-                <div className="space-y-1 text-muted-foreground">
-                  <p><strong>Admin:</strong> eneias@email.com / 123456</p>
-                  <p><strong>Locador ativo:</strong> carlos@email.com / 123456</p>
-                  <p><strong>Locatário atvo:</strong> maria@email.com / 123456</p>
-                  <p><strong>Locador inativo:</strong> joao@email.com / 123456</p>
-                  <p><strong>Locatário inativo:</strong> ana@email.com / 123456</p>
-                </div>
-              </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
@@ -137,11 +107,6 @@ const Login = () => {
                   </span>
                 )}
               </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  Esqueci minha senha
-                </Link>
-              </p>
               <p className="text-sm text-muted-foreground text-center">
                 Não tem uma conta?{" "}
                 <Link to="/register" className="text-primary hover:underline font-medium">

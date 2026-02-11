@@ -9,26 +9,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { users } from '@/data/users';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const UserMenu = () => {
   const navigate = useNavigate();
-  
-  // Verifica se há usuário logado
-  const loggedUserId = localStorage.getItem('loggedUserId');
-  const loggedUserType = localStorage.getItem('loggedUserType');
-  const profileRoute = loggedUserType === 'locador' ? '/landlord/profile' : '/profile';
-  const user = loggedUserId ? users.find(u => u.id === loggedUserId) : null;
+  const { user, profile, roles, signOut, loading } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem('loggedUserId');
+  const isLocador = roles.includes('locador');
+  const isLocatario = roles.includes('locatario');
+  const profileRoute = isLocador ? '/landlord/profile' : '/profile';
+
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Logout realizado com sucesso!');
     navigate('/');
-    window.location.reload();
   };
 
-  if (!user) {
+  if (loading) return null;
+
+  if (!user || !profile) {
     return (
       <button
         onClick={() => navigate('/login')}
@@ -45,9 +45,9 @@ const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 rounded-full hover:bg-muted p-1 transition-colors">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.photo} alt={user.name} />
+            <AvatarImage src={profile.photo ?? undefined} alt={profile.name} />
             <AvatarFallback>
-              {user.name.split(' ').map(n => n[0]).join('')}
+              {profile.name.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>
           </Avatar>
         </button>
@@ -55,12 +55,12 @@ const UserMenu = () => {
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-2">
           <div className="flex items-center gap-2">
-            <p className="font-medium">{user.name}</p>
-            {user.type === 'locador' && (
+            <p className="font-medium">{profile.name}</p>
+            {isLocador && (
               <Badge variant="secondary" className="text-xs">Locador</Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+          <p className="text-sm text-muted-foreground">{profile.email}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate(profileRoute)}>
@@ -71,10 +71,9 @@ const UserMenu = () => {
           <Settings className="mr-2 h-4 w-4" />
           Editar Perfil
         </DropdownMenuItem>
-        {user.type === 'locador' && (
+        {isLocador && (
           <>
             <DropdownMenuSeparator />
-
             <DropdownMenuItem onClick={() => navigate('/landlord')}>
               <FileText className="mr-2 h-4 w-4" />
               Contrato Padão
@@ -93,10 +92,9 @@ const UserMenu = () => {
             </DropdownMenuItem>
           </>
         )}
-        {user.type === 'locatario' && (
+        {isLocatario && (
           <>
             <DropdownMenuSeparator />
-
             <DropdownMenuItem onClick={() => navigate('/rental-history')}>
               <History className="mr-2 h-4 w-4" />
               Locações
