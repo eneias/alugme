@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, Calendar, Clock, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { users } from '@/data/users';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -11,7 +10,9 @@ const Profile = () => {
   const loggedUserId = localStorage.getItem('loggedUserId') || '1';
   const loggedUserType = localStorage.getItem('loggedUserType');
   const profileRoute = loggedUserType === 'locador' ? '/landlord/profile' : '/profile';
-  const user = users.find(u => u.id === loggedUserId) || users[0];
+
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   return (
     <div className="min-h-screen bg-background">

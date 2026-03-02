@@ -17,7 +17,6 @@ import Header from "@/components/Header";
 import PropertyMap from "@/components/PropertyMap";
 import { Button } from "@/components/ui/button";
 import { properties } from "@/data/properties";
-import { users } from "@/data/users";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
 
@@ -54,25 +53,15 @@ const PropertyDetails = () => {
   };
 
   const handleRentClick = () => {
-    const loggedUserId = localStorage.getItem("loggedUserId");
-    if (!loggedUserId) {
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    
+    if (!user) {
       toast({
         title: "Faça login para continuar",
         description: "Você precisa estar logado para alugar um imóvel.",
         variant: "destructive",
       });
-      navigate("/login", { state: { redirectTo: `/rent/${property.id}` } });
-      return;
-    }
-    
-    const user = users.find(u => u.id === loggedUserId);
-    if (!user) {
-      toast({
-        title: "Usuário não encontrado",
-        description: "Por favor, faça login novamente.",
-        variant: "destructive",
-      });
-      localStorage.removeItem("loggedUserId");
       navigate("/login", { state: { redirectTo: `/rent/${property.id}` } });
       return;
     }

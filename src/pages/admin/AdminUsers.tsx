@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Check, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,18 +25,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { users as initialUsers, User, UserType } from '@/data/users';
+import { User, UserType } from '@/data/users';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  
-  // Filtros
+
+  // Filtros (digitando)
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // Filtros aplicados (disparam API)
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [appliedType, setAppliedType] = useState<string>('all');
+  const [appliedStatus, setAppliedStatus] = useState<string>('all');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -48,21 +55,59 @@ const AdminUsers = () => {
     password: '',
   });
 
-  // Filtrar usuários
-  const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.includes(searchTerm);
-      const matchesType = filterType === 'all' || user.type === filterType;
-      const matchesStatus =
-        filterStatus === 'all' ||
-        (filterStatus === 'active' && user.status) ||
-        (filterStatus === 'inactive' && !user.status);
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [users, searchTerm, filterType, filterStatus]);
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams();
+
+      if (appliedSearch)
+        params.append('search', appliedSearch);
+
+      if (appliedType !== 'all') {
+        const role =
+          appliedType === 'locador' ? 'Locador' : 'Locatario';
+        params.append('role', role);
+      }
+
+      if (appliedStatus !== 'all') {
+        params.append('status', appliedStatus);
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/users?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar usuários');
+      }
+
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao carregar usuários');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔎 Busca usuários
+  useEffect(() => {
+    fetchUsers();
+  }, [appliedSearch, appliedType, appliedStatus]);
+
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm);
+    setAppliedType(filterType);
+    setAppliedStatus(filterStatus);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -95,42 +140,133 @@ const AdminUsers = () => {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const userData: User = {
-      id: editingUser?.id || Date.now().toString(),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      photo: formData.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      type: formData.type,
-      status: formData.status,
-      password: formData.password || editingUser?.password || '123456',
-      createdAt: editingUser?.createdAt || new Date().toISOString().split('T')[0],
-      lastAccess: editingUser?.lastAccess || new Date().toISOString().split('T')[0],
-    };
+    try {
+      const token = localStorage.getItem('token');
 
-    if (editingUser) {
-      setUsers(users.map((u) => (u.id === editingUser.id ? userData : u)));
-      toast.success('Usuário atualizado com sucesso!');
-    } else {
-      setUsers([...users, userData]);
-      toast.success('Usuário cadastrado com sucesso!');
+      const payload: {
+        name: string;
+        phone: string;
+        photo: string;
+        role: string;
+        status: string;
+        password: string;
+        email?: string;
+      } = {
+        name: formData.name,
+        phone: formData.phone || "",
+        photo: formData.photo || "",
+        role:
+          formData.type === 'locador'
+            ? 'Locador'
+            : formData.type === 'admin'
+            ? 'Admin'
+            : 'Locatario',
+        status: formData.status ? 'Active' : 'Inactive',
+        password: formData.password,
+      };
+
+      if (editingUser) {
+        // UPDATE
+        const response = await fetch(
+          `http://localhost:5000/api/users/${editingUser.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!response.ok) throw new Error();
+
+        toast.success('Usuário atualizado com sucesso!');
+      } else {
+        // CREATE
+        payload.email = formData.email; // email só é enviado na criação
+        
+        const response = await fetch(
+          `http://localhost:5000/api/users`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!response.ok) throw new Error();
+
+        toast.success('Usuário criado com sucesso!');
+      }
+
+      await fetchUsers();
+      setIsDialogOpen(false);
+      resetForm();
+    } catch {
+      toast.error('Erro ao salvar usuário');
     }
-
-    setIsDialogOpen(false);
-    resetForm();
   };
 
-  const handleDelete = (id: string) => {
-    setUsers(users.filter((u) => u.id !== id));
-    toast.success('Usuário removido com sucesso!');
+  const handleDelete = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(
+        `http://localhost:5000/api/users/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error();
+
+      toast.success('Usuário removido com sucesso!');
+      handleSearch();
+    } catch {
+      toast.error('Erro ao remover usuário');
+    }
+  };
+  
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(
+        `http://localhost:5000/api/users/${id}/status`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: currentStatus ? 'Inactive' : 'Active',
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error();
+
+      toast.success('Status atualizado com sucesso!');
+      handleSearch();
+    } catch {
+      toast.error('Erro ao atualizar status');
+    }
   };
 
-  const toggleStatus = (id: string) => {
-    setUsers(users.map((u) => (u.id === id ? { ...u, status: !u.status } : u)));
-  };
+  if (loading) {
+    return <div className="p-8">Carregando usuários...</div>;
+  }
 
   return (
     <div>
@@ -144,19 +280,41 @@ const AdminUsers = () => {
 
       {/* Filtros */}
       <div className="bg-card rounded-lg border border-border p-4 mb-4">
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 items-center">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
+              {/* Ícone esquerdo */}
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+
               <Input
                 placeholder="Buscar por nome, email ou telefone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSearch();
+                }}
+                className="pl-10 pr-24"
               />
+
+              {/* Botão dentro do input */}
+              <Button
+                size="sm"
+                onClick={handleSearch}
+                disabled={loading}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
+              >
+                {loading ? '...' : 'Buscar'}
+              </Button>
             </div>
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
+
+          <Select 
+            value={filterType}
+            onValueChange={(value) => {
+              setFilterType(value);
+              setAppliedType(value);
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -166,24 +324,35 @@ const AdminUsers = () => {
               <SelectItem value="locatario">Locatário</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+
+          <Select
+            value={filterStatus}
+            onValueChange={(value) => {
+              setFilterStatus(value);
+              setAppliedStatus(value);
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="inactive">Inativos</SelectItem>
+              <SelectItem value="Active">Ativos</SelectItem>
+              <SelectItem value="Inactive">Inativos</SelectItem>
+              <SelectItem value="Pending">Pendentes</SelectItem>
             </SelectContent>
           </Select>
+
         </div>
+
         {(searchTerm || filterType !== 'all' || filterStatus !== 'all') && (
           <div className="mt-2 text-sm text-muted-foreground">
-            {filteredUsers.length} usuário(s) encontrado(s)
+            {users.length} usuário(s) encontrado(s)
           </div>
         )}
       </div>
 
+      {/* Tabela permanece exatamente igual */}
       <div className="bg-card rounded-lg border border-border">
         <Table>
           <TableHeader>
@@ -200,14 +369,15 @@ const AdminUsers = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
+            {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <img
-                    src={user.photo}
-                    alt={user.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={user.photo} alt={user.name} className="rounded-full object-cover" />
+                    <AvatarFallback>
+                      {user.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
@@ -217,15 +387,21 @@ const AdminUsers = () => {
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
                       user.type === 'locador'
                         ? 'bg-purple-100 text-purple-700'
+                        : user.type === 'admin'
+                        ? 'bg-gray-300 text-gray-700'
                         : 'bg-blue-100 text-blue-700'
                     }`}
                   >
-                    {user.type === 'locador' ? 'Locador' : 'Locatário'}
+                    {user.type === 'locador'
+                      ? 'Locador'
+                      : user.type === 'admin'
+                      ? 'Admin'
+                      : 'Locatário'}
                   </span>
                 </TableCell>
                 <TableCell>
                   <button
-                    onClick={() => toggleStatus(user.id)}
+                    onClick={() => toggleStatus(user.id, user.status)}
                     className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                       user.status
                         ? 'bg-green-100 text-green-700'
@@ -244,18 +420,10 @@ const AdminUsers = () => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleOpenDialog(user)}
-                    >
+                    <Button variant="outline" size="icon" onClick={() => handleOpenDialog(user)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDelete(user.id)}
-                    >
+                    <Button variant="destructive" size="icon" onClick={() => handleDelete(user.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -303,7 +471,6 @@ const AdminUsers = () => {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="(11) 99999-9999"
-                required
               />
             </div>
 

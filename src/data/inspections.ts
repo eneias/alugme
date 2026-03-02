@@ -15,7 +15,6 @@ export type InspectionStatus =
 
 export interface Inspection {
   id: string;
-  contractId: string;
   propertyId: string;
 
   type: 'entrada' | 'saida';
@@ -71,7 +70,6 @@ export const conditionOptions = [
 export const mockInspections: Inspection[] = [
   {
     id: 'inspection-1',
-    contractId: 'contract-1',
     propertyId: '1',
     type: 'entrada',
     status: 'completed',
@@ -128,7 +126,6 @@ export const mockInspections: Inspection[] = [
 
   {
     id: 'inspection-2',
-    contractId: 'contract-2',
     propertyId: '1',
     type: 'saida',
     status: 'completed',
@@ -166,10 +163,8 @@ export const mockInspections: Inspection[] = [
 
     locked: true,
   },
-
   {
     id: 'inspection-3',
-    contractId: 'contract-3',
     propertyId: '3',
     type: 'entrada',
     status: 'pending_tenant',
@@ -209,6 +204,124 @@ export const mockInspections: Inspection[] = [
     },
 
     locked: false,
+  },
+
+  {
+    id: 'inspection-4',
+    propertyId: '6',
+    type: 'entrada',
+    status: 'pending_landlord',
+
+    generalDescription:
+      'Cobertura entregue em perfeito estado. Todos os acabamentos de alto padrão em excelente conservação. Piscina limpa e aquecedor funcionando.',
+    observations:
+      'Entregue com manual de instruções dos equipamentos. 4 vagas de garagem demarcadas. Sistema de segurança ativo.',
+
+    photos: [
+      {
+        id: 'photo-5',
+        url: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800',
+        description: 'Vista do terraço',
+        room: 'Varanda',
+        uploadedAt: '2024-07-26T10:00:00Z',
+        uploadedBy: 'landlord',
+      },
+      {
+        id: 'photo-6',
+        url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
+        description: 'Suíte principal',
+        room: 'Quarto 1',
+        uploadedAt: '2024-07-26T10:15:00Z',
+        uploadedBy: 'landlord',
+      },
+    ],
+
+    createdAt: '2024-07-26T09:00:00Z',
+
+    signatures: {
+      tenant: {
+        userId: 'tenant-2',
+        signedAt: '2024-07-26T11:00:00Z',
+        ip: '192.168.1.3',
+      },
+    },
+
+    locked: false,
+  },
+  {
+    id: 'inspection-4',
+    propertyId: '4',
+    type: 'entrada',
+    status: 'completed',
+
+    generalDescription:
+      'Imóvel em excelente estado de conservação. Paredes recém pintadas, piso em perfeitas condições. Instalações elétricas e hidráulicas funcionando normalmente.',
+    observations:
+      'Foi entregue com 2 conjuntos de chaves. Portão eletrônico com 2 controles. Ar condicionado funcionando em todos os quartos.',
+
+    photos: [
+      {
+        id: 'photo-1',
+        url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+        description: 'Sala de estar com sofá e móveis',
+        room: 'Sala de estar',
+        uploadedAt: '2024-05-28T10:00:00Z',
+        uploadedBy: 'landlord',
+      },
+      {
+        id: 'photo-2',
+        url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+        description: 'Cozinha completa com armários',
+        room: 'Cozinha',
+        uploadedAt: '2024-05-28T10:05:00Z',
+        uploadedBy: 'landlord',
+      },
+      {
+        id: 'photo-3',
+        url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
+        description: 'Quarto principal com cama king',
+        room: 'Quarto 1',
+        uploadedAt: '2024-05-28T10:10:00Z',
+        uploadedBy: 'landlord',
+      },
+    ],
+
+    createdAt: '2024-05-28T09:00:00Z',
+
+    signatures: {
+      landlord: {
+        userId: 'landlord-1',
+        signedAt: '2024-05-28T11:00:00Z',
+        ip: '192.168.1.1',
+      },
+      tenant: {
+        userId: 'tenant-1',
+        signedAt: '2024-05-28T14:30:00Z',
+        ip: '192.168.1.2',
+      },
+    },
+
+    locked: true,
+  },
+  {
+    id: 'inspection-5',
+    propertyId: '4',
+    type: 'saida',
+    status: 'disputed',
+
+    generalDescription:
+      '',
+    observations:
+      '',
+
+    photos: [],
+
+    createdAt: '2024-05-28T09:00:00Z',
+
+    signatures: {
+    },
+
+    locked: true,
   },
 ];
 

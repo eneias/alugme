@@ -1,12 +1,55 @@
+import { useEffect, useState } from 'react';
 import { Building2, Users, TrendingUp, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { properties } from '@/data/properties';
-import { users } from '@/data/users';
+import {Avatar, AvatarFallback, AvatarImage} from '@radix-ui/react-avatar';
+
+interface ApiUser {
+  id: string;
+  name: string;
+  email: string;
+  type: string; // Admin | Locador | Locatario
+  photo?: string;
+}
 
 const AdminDashboard = () => {
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('http://localhost:5000/api/users/last', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao buscar usuários');
+        }
+
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
   const locadores = users.filter((u) => u.type === 'locador').length;
   const locatarios = users.filter((u) => u.type === 'locatario').length;
-  const avgPrice = properties.reduce((acc, p) => acc + p.price, 0) / properties.length;
+
+  const avgPrice =
+    properties.length > 0
+      ? properties.reduce((acc, p) => acc + p.price, 0) / properties.length
+      : 0;
 
   const stats = [
     {
@@ -35,6 +78,10 @@ const AdminDashboard = () => {
     },
   ];
 
+  if (loading) {
+    return <p>Carregando...</p>;
+  }
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -58,57 +105,35 @@ const AdminDashboard = () => {
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Últimos Imóveis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {properties.slice(0, 5).map((property) => (
-                <div key={property.id} className="flex items-center gap-4">
-                  <img
-                    src={property.images[0]}
-                    alt={property.name}
-                    className="w-12 h-12 rounded-lg object-cover"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">{property.name}</p>
-                    <p className="text-sm text-muted-foreground">{property.neighborhood}</p>
-                  </div>
-                  <p className="font-semibold text-primary">
-                    R$ {property.price.toLocaleString('pt-BR')}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle>Últimos Usuários</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {users.slice(0, 5).map((user) => (
+              {users.slice(0, 10).map((user) => (
                 <div key={user.id} className="flex items-center gap-4">
-                  <img
-                    src={user.photo}
-                    alt={user.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={user.photo} alt={user.name}  className="rounded-full object-cover"/>
+                    <AvatarFallback>
+                      {user.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+
                   <div className="flex-1">
                     <p className="font-medium">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
                       user.type === 'admin'
                         ? 'bg-gray-600 text-gray-100'
-                        : user.type === 'locador' ?
-                          'bg-purple-100 text-purple-700'
-                          : 'bg-blue-100 text-blue-700'
+                        : user.type === 'locador'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-blue-100 text-blue-700'
                     }`}
                   >
-                    {user.type === 'admin' ? 'Admin' : user.type === 'locador' ? 'Locador' : 'Locatário'}
+                    {user.type}
                   </span>
                 </div>
               ))}

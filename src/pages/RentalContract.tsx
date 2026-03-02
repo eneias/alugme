@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { properties } from "@/data/properties";
-import { users } from "@/data/users";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContractFormData {
@@ -35,8 +34,9 @@ const RentalContract = () => {
 
   // Verificar se usuário está logado e preencher dados
   useEffect(() => {
-    const loggedUserId = localStorage.getItem("loggedUserId");
-    if (!loggedUserId) {
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    if (!user) {
       toast({
         title: "Faça login para continuar",
         description: "Você precisa estar logado para alugar um imóvel.",
@@ -46,12 +46,6 @@ const RentalContract = () => {
       return;
     }
 
-    const user = users.find(u => u.id === loggedUserId);
-    if (user) {
-      setValue("fullName", user.name);
-      setValue("email", user.email);
-      setValue("phone", user.phone);
-    }
   }, [navigate, id, setValue, toast]);
 
   const property = properties.find((p) => p.id === id);

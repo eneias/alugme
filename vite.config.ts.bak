@@ -8,13 +8,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 2400,
-    watch: {
-      usePolling: true,
-      interval: 100
-    }
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
-  base: "/alugme",
+  base: "alugme",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

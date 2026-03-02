@@ -40,7 +40,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { landlords, RentalContract, BankAccount, rentalContracts, getPropertyContracts, getContractSignedDate } from '@/data/landlords';
 import { properties, Property } from '@/data/properties';
-import { users } from '@/data/users';
 import { Inspection, mockInspections } from '@/data/inspections';
 
 const MyProperties = () => {
@@ -88,8 +87,10 @@ const MyProperties = () => {
       return;
     }
 
-    const user = users.find(u => u.id === loggedUserId);
-    if (!user || user.type !== 'locador') {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (!user || user.type !== 'locador' || user.type !== 'admin') {
       toast({
         title: 'Acesso negado',
         description: 'Apenas locadores podem acessar esta página.',

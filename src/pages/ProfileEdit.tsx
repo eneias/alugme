@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { users } from '@/data/users';
 import { toast } from 'sonner';
 
 const ProfileEdit = () => {
@@ -15,7 +14,9 @@ const ProfileEdit = () => {
   const loggedUserId = localStorage.getItem('loggedUserId') || '1';
   const loggedUserType = localStorage.getItem('loggedUserType');
   const profileRoute = loggedUserType === 'locador' ? '/landlord/profile' : '/profile';
-  const user = users.find(u => u.id === loggedUserId) || users[0];
+
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   const [formData, setFormData] = useState({
     name: user.name,

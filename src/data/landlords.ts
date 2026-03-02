@@ -102,7 +102,7 @@ export const landlords: Landlord[] = [
 export const rentalContracts: RentalContract[] = [
   {
     id: 'contract-1',
-    propertyId: '1',
+    propertyId: '6',
     tenantId: '2',
     tenantName: 'Maria Santos',
     tenantEmail: 'maria@email.com',
@@ -218,6 +218,42 @@ A locação é feita pelo prazo de 24 meses, com início em 01/08/2024 e términ
 CLÁUSULA TERCEIRA - DO ALUGUEL
 O aluguel mensal é de R$ 8.500,00, que deverá ser pago até o dia 10 de cada mês.`,
   },
+  {
+    id: 'contract-4',
+    propertyId: '4',
+    tenantId: '2',
+    tenantName: 'Maria Santos',
+    tenantEmail: 'maria@email.com',
+    tenantCpf: '111.222.333-44',
+    tenantPhone: '(11) 99999-2222',
+    startDate: '2024-08-01',
+    endDate: '2026-08-01',
+    duration: 24,
+    monthlyRent: 8500,
+    status: 'cancelled',
+    signatures: {
+      landlord: {
+        userId: '1',
+        signedAt: '2024-07-25T16:00:00Z',
+        ip: '192.168.1.100'
+      },
+      tenant: {
+        userId: '2',
+        signedAt: '2024-07-25T18:20:00Z',
+        ip: '192.168.1.101'
+      }
+    },
+    contractTerms: `CONTRATO DE LOCAÇÃO RESIDENCIAL
+
+CLÁUSULA PRIMEIRA - DO OBJETO
+O presente contrato tem como objeto a locação do imóvel Cobertura Jardins, situado em Rua Oscar Freire, 800, Jardins - São Paulo.
+
+CLÁUSULA SEGUNDA - DO PRAZO
+A locação é feita pelo prazo de 24 meses, com início em 01/08/2024 e término em 01/08/2026.
+
+CLÁUSULA TERCEIRA - DO ALUGUEL
+O aluguel mensal é de R$ 8.500,00, que deverá ser pago até o dia 10 de cada mês.`,
+  },
 ];
 
 // Locações mockadas
@@ -248,6 +284,15 @@ export const rentals: Rental[] = [
     endDate: '2026-08-01',
     status: 'active',
     contracts: [rentalContracts[2]], // contract-3
+  },
+  {
+    id: 'rental-4',
+    propertyId: '4',
+    tenantId: '2',
+    startDate: '2024-08-01',
+    endDate: '2026-08-01',
+    status: 'cancelled',
+    contracts: [rentalContracts[3]], // contract-4
   },
 ];
 

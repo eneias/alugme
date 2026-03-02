@@ -1,32 +1,47 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { users } from '@/data/users';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   allowedRoles: Array<'admin' | 'locador' | 'locatario'>;
   redirectTo?: string;
 }
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  type: 'admin' | 'locador' | 'locatario';
+}
+
 const ProtectedRoute = ({
   allowedRoles,
   redirectTo = '/login',
 }: ProtectedRouteProps) => {
-  const loggedUserId = localStorage.getItem('loggedUserId');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  console.log('ProtectedRoute check, userId:', loggedUserId);
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+
+    setLoading(false);
+  }, []);
+
+  if (loading) return null;
 
   // Não logado
-  if (!loggedUserId) {
+  if (!user) {
     return <Navigate to={redirectTo} replace />;
   }
 
-  const user = users.find(u => u.id === loggedUserId);
-
   // Sem permissão
-  if (!user || !allowedRoles.includes(user.type)) {
+  if (!allowedRoles.includes(user.type)) {
     return <Navigate to="/" replace />;
   }
 
-  // Autorizado
   return <Outlet />;
 };
 

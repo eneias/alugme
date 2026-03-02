@@ -8,17 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { users } from '@/data/users';
 
 const LandlordSetup = () => {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const [accepted, setAccepted] = useState(false);
-  const [currentUser, setCurrentUser] = useState<typeof users[0] | null>(null);
+  const [currentUser, setCurrentUser] = useState<typeof user | null>(null);
 
   useEffect(() => {
-    const loggedUserId = localStorage.getItem('loggedUserId');
-    if (!loggedUserId) {
+    
+    if (!user) {
       toast({
         title: 'Acesso negado',
         description: 'Você precisa estar logado para acessar esta página.',
@@ -28,7 +30,6 @@ const LandlordSetup = () => {
       return;
     }
 
-    const user = users.find(u => u.id === loggedUserId);
     if (!user || user.type !== 'locador') {
       toast({
         title: 'Acesso negado',
@@ -40,7 +41,7 @@ const LandlordSetup = () => {
     }
 
     setCurrentUser(user);
-  }, [navigate, toast]);
+  }, [navigate, toast, user]);
 
   const handleContinue = () => {
     if (!accepted) {

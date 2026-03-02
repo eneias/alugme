@@ -9,20 +9,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { users } from '@/data/users';
 import { toast } from 'sonner';
 
 const UserMenu = () => {
   const navigate = useNavigate();
+
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
   
-  // Verifica se há usuário logado
-  const loggedUserId = localStorage.getItem('loggedUserId');
-  const loggedUserType = localStorage.getItem('loggedUserType');
-  const profileRoute = loggedUserType === 'locador' ? '/landlord/profile' : '/profile';
-  const user = loggedUserId ? users.find(u => u.id === loggedUserId) : null;
+  const profileRoute = user?.type === 'locador' ? '/landlord/profile' : '/profile';
 
   const handleLogout = () => {
-    localStorage.removeItem('loggedUserId');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     toast.success('Logout realizado com sucesso!');
     navigate('/');
     window.location.reload();
