@@ -25,6 +25,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
@@ -47,6 +57,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   // Filtros (digitando)
   const [searchTerm, setSearchTerm] = useState('');
@@ -244,7 +255,7 @@ const AdminUsers = () => {
       if (!response.ok) throw new Error();
 
       toast.success('Usuário removido com sucesso!');
-      handleSearch();
+      await fetchUsers();
     } catch {
       toast.error('Erro ao remover usuário');
     }
@@ -436,7 +447,7 @@ const AdminUsers = () => {
                     <Button variant="outline" size="icon" onClick={() => handleOpenDialog(user)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDelete(user.id)}>
+                    <Button variant="destructive" size="icon" onClick={() => setDeletingUserId(user.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -446,6 +457,26 @@ const AdminUsers = () => {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={!!deletingUserId} onOpenChange={(open) => { if (!open) setDeletingUserId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir usuário</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (deletingUserId) handleDelete(deletingUserId); setDeletingUserId(null); }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
