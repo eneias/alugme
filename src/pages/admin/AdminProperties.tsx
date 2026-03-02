@@ -25,11 +25,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { properties as initialProperties, Property } from '@/data/properties';
+import { Property, useProperties } from '@/hooks/useProperties';
 import { toast } from 'sonner';
 
 const AdminProperties = () => {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const { data: dbProperties = [], refetch } = useProperties();
+  const [properties, setProperties] = useState<Property[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   
@@ -127,6 +128,8 @@ const AdminProperties = () => {
       createdAt: editingProperty?.createdAt || new Date().toISOString().split('T')[0],
       coordinates: editingProperty?.coordinates || { lat: -23.5505, lng: -46.6333 },
       availability: editingProperty?.availability || 'available',
+      landlordId: editingProperty?.landlordId || null,
+      bankAccountId: editingProperty?.bankAccountId || null,
     };
 
     if (editingProperty) {

@@ -1,8 +1,10 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
+type AppRole = 'admin' | 'locador' | 'locatario';
+
 interface ProtectedRouteProps {
-  allowedRoles: Array<'admin' | 'locador' | 'locatario'>;
+  allowedRoles: AppRole[];
   redirectTo?: string;
 }
 
@@ -10,7 +12,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  type: 'admin' | 'locador' | 'locatario';
+  type: AppRole;
 }
 
 const ProtectedRoute = ({

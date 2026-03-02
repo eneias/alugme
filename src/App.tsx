@@ -56,7 +56,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<ProfileEdit />} />
           </Route>
-          
+
           {/* Landlord Routes */}
           <Route element={<ProtectedRoute allowedRoles={['locador']} />}>
             <Route path="/landlord" element={<LandlordLayout />}>
@@ -72,13 +72,13 @@ const App = () => (
               <Route path="inspection-create" element={<CreateInspection />} />
             </Route>
           </Route>
-          
+
           {/* Tenant Routes */}
           <Route element={<ProtectedRoute allowedRoles={['locatario']} />}>
             <Route index path="rental-history" element={<RentalHistory />} />
           </Route>
 
-          {/* Admin Routes */}          
+          {/* Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />

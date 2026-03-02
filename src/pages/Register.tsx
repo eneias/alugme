@@ -8,20 +8,22 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
-import { UserType } from '@/data/users';
+
+type AppRole = 'locador' | 'locatario';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    type: 'locatario' as UserType,
+    type: 'locatario' as AppRole,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -34,9 +36,33 @@ const Register = () => {
       return;
     }
 
-    // Simulating registration (PoC)
-    toast.success('Cadastro realizado com sucesso!');
-    navigate('/');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          role: formData.type === 'locador' ? 'Locador' : 'Locatario',
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Erro ao realizar cadastro');
+      }
+
+      toast.success('Cadastro realizado com sucesso!');
+      navigate('/login');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao realizar cadastro');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -143,7 +169,7 @@ const Register = () => {
                 <Label className="mb-3 block">Tipo de Usuário</Label>
                 <RadioGroup
                   value={formData.type}
-                  onValueChange={(value: UserType) => setFormData({ ...formData, type: value })}
+                  onValueChange={(value: string) => setFormData({ ...formData, type: value as AppRole })}
                   className="grid grid-cols-2 gap-4"
                 >
                   <Label
@@ -180,8 +206,15 @@ const Register = () => {
                 </RadioGroup>
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Criar Conta
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Cadastrando...
+                  </span>
+                ) : (
+                  'Criar Conta'
+                )}
               </Button>
             </form>
 

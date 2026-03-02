@@ -25,9 +25,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { User, UserType } from '@/data/users';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
+
+type UserType = 'admin' | 'locador' | 'locatario';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  photo: string;
+  type: UserType;
+  status: boolean;
+  createdAt: string;
+  lastAccess: string;
+}
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<User[]>([]);

@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { Building2, Users, TrendingUp, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { properties } from '@/data/properties';
-import {Avatar, AvatarFallback, AvatarImage} from '@radix-ui/react-avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
 interface ApiUser {
   id: string;
   name: string;
   email: string;
-  type: string; // Admin | Locador | Locatario
+  type: string;
   photo?: string;
 }
 
@@ -44,7 +44,6 @@ const AdminDashboard = () => {
   }, []);
 
   const locadores = users.filter((u) => u.type === 'locador').length;
-  const locatarios = users.filter((u) => u.type === 'locatario').length;
 
   const avgPrice =
     properties.length > 0
@@ -52,30 +51,10 @@ const AdminDashboard = () => {
       : 0;
 
   const stats = [
-    {
-      title: 'Total de Imóveis',
-      value: properties.length,
-      icon: Building2,
-      color: 'text-blue-500',
-    },
-    {
-      title: 'Total de Usuários',
-      value: users.length,
-      icon: Users,
-      color: 'text-green-500',
-    },
-    {
-      title: 'Locadores',
-      value: locadores,
-      icon: TrendingUp,
-      color: 'text-purple-500',
-    },
-    {
-      title: 'Preço Médio',
-      value: `R$ ${avgPrice.toLocaleString('pt-BR')}`,
-      icon: DollarSign,
-      color: 'text-amber-500',
-    },
+    { title: 'Total de Imóveis', value: properties.length, icon: Building2, color: 'text-blue-500' },
+    { title: 'Total de Usuários', value: users.length, icon: Users, color: 'text-green-500' },
+    { title: 'Locadores', value: locadores, icon: TrendingUp, color: 'text-purple-500' },
+    { title: 'Preço Médio', value: `R$ ${avgPrice.toLocaleString('pt-BR')}`, icon: DollarSign, color: 'text-amber-500' },
   ];
 
   if (loading) {
@@ -90,9 +69,7 @@ const AdminDashboard = () => {
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
               <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </CardHeader>
             <CardContent>
@@ -112,7 +89,7 @@ const AdminDashboard = () => {
               {users.slice(0, 10).map((user) => (
                 <div key={user.id} className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={user.photo} alt={user.name}  className="rounded-full object-cover"/>
+                    <AvatarImage src={user.photo} alt={user.name} className="rounded-full object-cover" />
                     <AvatarFallback>
                       {user.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>

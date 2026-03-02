@@ -16,8 +16,10 @@ const UserMenu = () => {
 
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
-  
-  const profileRoute = user?.type === 'locador' ? '/landlord/profile' : '/profile';
+
+  const isLocador = user?.type === 'locador';
+  const isLocatario = user?.type === 'locatario';
+  const profileRoute = isLocador ? '/landlord/profile' : '/profile';
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -44,9 +46,9 @@ const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 rounded-full hover:bg-muted p-1 transition-colors">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.photo} alt={user.name} />
+            <AvatarImage src={user.photo ?? undefined} alt={user.name} />
             <AvatarFallback>
-              {user.name.split(' ').map(n => n[0]).join('')}
+              {user.name.split(' ').map((n: string) => n[0]).join('')}
             </AvatarFallback>
           </Avatar>
         </button>
@@ -55,7 +57,7 @@ const UserMenu = () => {
         <div className="px-2 py-2">
           <div className="flex items-center gap-2">
             <p className="font-medium">{user.name}</p>
-            {user.type === 'locador' && (
+            {isLocador && (
               <Badge variant="secondary" className="text-xs">Locador</Badge>
             )}
           </div>
@@ -66,17 +68,16 @@ const UserMenu = () => {
           <User className="mr-2 h-4 w-4" />
           Meu Perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate(profileRoute+'/edit')}>
+        <DropdownMenuItem onClick={() => navigate(profileRoute + '/edit')}>
           <Settings className="mr-2 h-4 w-4" />
           Editar Perfil
         </DropdownMenuItem>
-        {user.type === 'locador' && (
+        {isLocador && (
           <>
             <DropdownMenuSeparator />
-
             <DropdownMenuItem onClick={() => navigate('/landlord')}>
               <FileText className="mr-2 h-4 w-4" />
-              Contrato Padão
+              Contrato Padrão
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/landlord/bank-account')}>
               <CreditCard className="mr-2 h-4 w-4" />
@@ -92,10 +93,9 @@ const UserMenu = () => {
             </DropdownMenuItem>
           </>
         )}
-        {user.type === 'locatario' && (
+        {isLocatario && (
           <>
             <DropdownMenuSeparator />
-
             <DropdownMenuItem onClick={() => navigate('/rental-history')}>
               <History className="mr-2 h-4 w-4" />
               Locações

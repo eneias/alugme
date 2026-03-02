@@ -1,12 +1,12 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Star, 
-  Bed, 
-  Bath, 
-  Maximize, 
+import {
+  ArrowLeft,
+  MapPin,
+  Star,
+  Bed,
+  Bath,
+  Maximize,
   Check,
   Calendar,
   ChevronLeft,
@@ -26,7 +26,7 @@ const PropertyDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { toast } = useToast();
 
-  const property = properties.find((p) => p.id === id);
+  const property = properties.find(p => p.id === id);
 
   if (!property) {
     return (
@@ -41,13 +41,13 @@ const PropertyDetails = () => {
   }
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === property.images.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? property.images.length - 1 : prev - 1
     );
   };
@@ -55,7 +55,7 @@ const PropertyDetails = () => {
   const handleRentClick = () => {
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
-    
+
     if (!user) {
       toast({
         title: "Faça login para continuar",
@@ -74,13 +74,12 @@ const PropertyDetails = () => {
       <Header />
 
       <div className="container py-8">
-        {/* Back button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="mb-6"
         >
-          <Link 
+          <Link
             to="#"
             onClick={(e) => {
               e.preventDefault();
@@ -93,7 +92,6 @@ const PropertyDetails = () => {
           </Link>
         </motion.div>
 
-        {/* Main Gallery */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -106,8 +104,7 @@ const PropertyDetails = () => {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 gradient-overlay opacity-30" />
-            
-            {/* Navigation */}
+
             <button
               onClick={prevImage}
               className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-background/90 shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
@@ -121,21 +118,19 @@ const PropertyDetails = () => {
               <ChevronRight className="h-6 w-6" />
             </button>
 
-            {/* Image counter */}
             <div className="absolute bottom-4 right-4 bg-background/90 px-3 py-1.5 rounded-full text-sm font-medium">
               {currentImageIndex + 1} / {property.images.length}
             </div>
           </div>
 
-          {/* Thumbnails */}
           <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
             {property.images.map((image, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentImageIndex(idx)}
                 className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                  idx === currentImageIndex 
-                    ? 'border-primary shadow-card' 
+                  idx === currentImageIndex
+                    ? 'border-primary shadow-card'
                     : 'border-transparent opacity-60 hover:opacity-100'
                 }`}
               >
@@ -146,14 +141,12 @@ const PropertyDetails = () => {
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Info */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="lg:col-span-2 space-y-8"
           >
-            {/* Title and Rating */}
             <div>
               <div className="flex items-start justify-between gap-4 mb-4">
                 <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
@@ -171,7 +164,6 @@ const PropertyDetails = () => {
               </div>
             </div>
 
-            {/* Quick Info */}
             <div className="flex flex-wrap gap-6 p-6 rounded-2xl bg-card border border-border/50 shadow-card">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -213,18 +205,16 @@ const PropertyDetails = () => {
               </div>
             </div>
 
-            {/* Description */}
             <div>
               <h2 className="font-display text-2xl font-semibold mb-4">Sobre o imóvel</h2>
               <p className="text-muted-foreground leading-relaxed">{property.description}</p>
             </div>
 
-            {/* Amenities */}
             <div>
               <h2 className="font-display text-2xl font-semibold mb-4">Comodidades</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {property.amenities.map((amenity) => (
-                  <div 
+                  <div
                     key={amenity}
                     className="flex items-center gap-2 p-3 rounded-xl bg-secondary/50"
                   >
@@ -235,12 +225,11 @@ const PropertyDetails = () => {
               </div>
             </div>
 
-            {/* Map */}
             <div>
               <h2 className="font-display text-2xl font-semibold mb-4">Localização</h2>
-              <PropertyMap 
-                lat={property.coordinates.lat} 
-                lng={property.coordinates.lng} 
+              <PropertyMap
+                lat={property.coordinates.lat}
+                lng={property.coordinates.lng}
                 name={property.name}
                 address={[
                     property.address,
@@ -251,7 +240,6 @@ const PropertyDetails = () => {
             </div>
           </motion.div>
 
-          {/* Sidebar - Booking Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -271,8 +259,8 @@ const PropertyDetails = () => {
                 </p>
               </div>
 
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="w-full gradient-hero text-primary-foreground font-semibold text-lg h-14 rounded-xl shadow-card hover:shadow-card-hover transition-shadow"
                 onClick={handleRentClick}
               >
@@ -302,7 +290,6 @@ const PropertyDetails = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

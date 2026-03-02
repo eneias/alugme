@@ -31,11 +31,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { banners as initialBanners, Banner } from "@/data/banners";
+import { Banner, useBanners } from "@/hooks/useBanners";
 
 const AdminBanners = () => {
   const { toast } = useToast();
-  const [bannerList, setBannerList] = useState<Banner[]>(initialBanners);
+  const { data: dbBanners = [] } = useBanners();
+  const [bannerList, setBannerList] = useState<Banner[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

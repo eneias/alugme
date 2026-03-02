@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Filter, MapPin, Star, Calendar } from "lucide-react";
+import { Filter, MapPin, Star } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { neighborhoods } from "@/data/properties";
+import { useNeighborhoods } from "@/hooks/useProperties";
 
 interface FilterBarProps {
   selectedNeighborhood: string;
@@ -22,6 +22,8 @@ const FilterBar = ({
   sortBy,
   setSortBy,
 }: FilterBarProps) => {
+  const { data: neighborhoods = [] } = useNeighborhoods();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}

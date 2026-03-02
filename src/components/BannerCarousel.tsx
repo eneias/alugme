@@ -2,18 +2,20 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { banners, Banner } from "@/data/banners";
+import { useBanners } from "@/hooks/useBanners";
 import { Link } from "react-router-dom";
 
 const BannerCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const activeBanners = banners.filter(b => b.active).sort((a, b) => a.order - b.order);
+  const { data: activeBanners = [] } = useBanners();
 
   const nextSlide = useCallback(() => {
+    if (activeBanners.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % activeBanners.length);
   }, [activeBanners.length]);
 
   const prevSlide = () => {
+    if (activeBanners.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
   };
 
@@ -21,15 +23,16 @@ const BannerCarousel = () => {
     setCurrentIndex(index);
   };
 
-  // Auto-play
   useEffect(() => {
+    if (activeBanners.length === 0) return;
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
-  }, [nextSlide]);
+  }, [nextSlide, activeBanners.length]);
 
   if (activeBanners.length === 0) return null;
 
   const currentBanner = activeBanners[currentIndex];
+  if (!currentBanner) return null;
 
   return (
     <section className="relative h-[400px] md:h-[500px] overflow-hidden">
@@ -42,15 +45,12 @@ const BannerCarousel = () => {
           transition={{ duration: 0.5 }}
           className="absolute inset-0"
         >
-          {/* Background Image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${currentBanner.imageUrl})` }}
           />
-          {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/50 to-transparent" />
 
-          {/* Content */}
           <div className="container relative h-full flex items-center px-4">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -76,7 +76,6 @@ const BannerCarousel = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows */}
       {activeBanners.length > 1 && (
         <>
           <Button
@@ -98,7 +97,6 @@ const BannerCarousel = () => {
         </>
       )}
 
-      {/* Dots Indicator */}
       {activeBanners.length > 1 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           {activeBanners.map((_, index) => (
