@@ -29,6 +29,7 @@ public class PropertiesController : ControllerBase {
   public async Task<IActionResult> Put(Guid id, Property p){
     var existing = await _db.Properties.FindAsync(id);
     if(existing==null) return NotFound();
+    p.Id = id; // garante que o Id não seja sobrescrito
     _db.Entry(existing).CurrentValues.SetValues(p);
     await _db.SaveChangesAsync();
     return NoContent();

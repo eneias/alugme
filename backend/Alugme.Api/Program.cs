@@ -64,6 +64,8 @@ app.UseSwaggerUI();
 
 app.UseCors("FrontendDev");
 
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

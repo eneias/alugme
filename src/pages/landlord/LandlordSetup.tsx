@@ -10,16 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 
 const LandlordSetup = () => {
-  const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : null;
-
   const navigate = useNavigate();
   const { toast } = useToast();
   const [accepted, setAccepted] = useState(false);
-  const [currentUser, setCurrentUser] = useState<typeof user | null>(null);
+  const [currentUser, setCurrentUser] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
-    
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
     if (!user) {
       toast({
         title: 'Acesso negado',
@@ -30,7 +29,7 @@ const LandlordSetup = () => {
       return;
     }
 
-    if (!user || user.type !== 'locador') {
+    if (user.type !== 'locador') {
       toast({
         title: 'Acesso negado',
         description: 'Apenas locadores podem acessar esta página.',
@@ -41,7 +40,7 @@ const LandlordSetup = () => {
     }
 
     setCurrentUser(user);
-  }, [navigate, toast, user]);
+  }, [navigate, toast]);
 
   const handleContinue = () => {
     if (!accepted) {

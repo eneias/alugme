@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { landlords, BankAccount } from '@/data/landlords';
-import { users } from '@/data/users';
 
 const banks = [
   'Banco do Brasil',
@@ -53,7 +52,7 @@ const BankAccountPage = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
-  const [currentUser, setCurrentUser] = useState<typeof users[0] | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name?: string; type: string } | null>(null);
   
   const [formData, setFormData] = useState({
     bank: '',
@@ -65,8 +64,11 @@ const BankAccountPage = () => {
   });
 
   useEffect(() => {
-    const loggedUserId = localStorage.getItem('loggedUserId');
-    if (!loggedUserId) {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (!token || !user) {
       toast({
         title: 'Acesso negado',
         description: 'Você precisa estar logado para acessar esta página.',
@@ -76,8 +78,7 @@ const BankAccountPage = () => {
       return;
     }
 
-    const user = users.find(u => u.id === loggedUserId);
-    if (!user || user.type !== 'locador') {
+    if (user.type !== 'locador') {
       toast({
         title: 'Acesso negado',
         description: 'Apenas locadores podem acessar esta página.',
@@ -89,7 +90,7 @@ const BankAccountPage = () => {
 
     setCurrentUser(user);
 
-    const landlord = landlords.find(l => l.userId === loggedUserId);
+    const landlord = landlords.find(l => l.userId === user.id);
     if (landlord) {
       setBankAccounts(landlord.bankAccounts);
     }

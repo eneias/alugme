@@ -133,6 +133,11 @@ const AdminUsers = () => {
     setAppliedStatus(filterStatus);
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -317,18 +322,19 @@ const AdminUsers = () => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSearch();
                 }}
-                className="pl-10 pr-24"
+                className="pl-10 pr-36"
               />
 
-              {/* Botão dentro do input */}
-              <Button
-                size="sm"
-                onClick={handleSearch}
-                disabled={loading}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
-              >
-                {loading ? '...' : 'Buscar'}
-              </Button>
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {(searchTerm || appliedSearch) && (
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleClearSearch}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+                <Button size="sm" onClick={handleSearch} disabled={loading} className="h-8">
+                  {loading ? '...' : 'Buscar'}
+                </Button>
+              </div>
             </div>
           </div>
 

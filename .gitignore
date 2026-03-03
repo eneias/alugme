@@ -27,3 +27,4 @@ dist-ssr
 
 **/bin/*
 **/obj/*
+**/backend/Alugme.Api/wwwroot/uploads/*

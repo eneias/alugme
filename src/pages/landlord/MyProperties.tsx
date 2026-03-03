@@ -1,14 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Plus, Search, Building2, Eye, Edit, FileText, 
-  Upload, Trash2, MapPin, Home, DollarSign, CheckCircle, 
-  Clock, XCircle, History,
-  ClipboardCheck
+import {
+  Plus, Search, Building2, Eye, Edit, FileText,
+  Upload, Trash2, MapPin, Home, DollarSign, CheckCircle,
+  Clock, XCircle, History, ClipboardCheck, X, ImagePlus,
 } from 'lucide-react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +27,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -37,29 +44,71 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
-import { landlords, RentalContract, BankAccount, rentalContracts, getPropertyContracts, getContractSignedDate } from '@/data/landlords';
-import { properties, Property } from '@/data/properties';
-import { Inspection, mockInspections } from '@/data/inspections';
+import { toast } from 'sonner';
+import { RentalContract, getPropertyContracts, getContractSignedDate } from '@/data/landlords';
+import { mockInspections } from '@/data/inspections';
+
+const MAX_IMAGES = 10;
+
+interface Property {
+  id: string;
+  name: string;
+  address: string;
+  neighborhood: string;
+  city: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  rating: number;
+  reviews: number;
+  createdAt: string;
+  description: string;
+  amenities: string[];
+  images: string[];
+  lat: number;
+  lng: number;
+  landlordId: string | null;
+  bankAccountId: string | null;
+  availability: string;
+}
+
+interface PendingFile {
+  file: File;
+  preview: string; // URL.createObjectURL — apenas local
+}
+
+interface CurrentUser {
+  id: string;
+  type: string;
+  name?: string;
+}
 
 const MyProperties = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [availabilityFilter, setAvailabilityFilter] = useState('all');
-  const [propertiesList, setPropertiesList] = useState<Property[]>(properties);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
+
+  // History / Contract / Inspection dialogs
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
   const [isInspectionsDialogOpen, setIsInspectionsDialogOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedContract, setSelectedContract] = useState<RentalContract | null>(null);
-  const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
-  const [currentLandlord, setCurrentLandlord] = useState<typeof landlords[0] | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
-  
+  // Search / filter
+  const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [availabilityFilter, setAvailabilityFilter] = useState('all');
+
+  const handleSearch = () => setAppliedSearch(searchTerm);
+  const handleClearSearch = () => { setSearchTerm(''); setAppliedSearch(''); };
+
+  // Form state
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -70,76 +119,102 @@ const MyProperties = () => {
     bathrooms: '',
     area: '',
     description: '',
-    amenities: '',
+    amenities: [] as string[],
     bankAccountId: '',
+    images: [] as string[],
   });
+  const [amenityInput, setAmenityInput] = useState('');
 
-  // Verificar se usuário está logado e é locador
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [urlInput, setUrlInput] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const totalImages = formData.images.length + pendingFiles.length;
+
+  const revokePendingPreviews = (files: PendingFile[]) => {
+    files.forEach((pf) => URL.revokeObjectURL(pf.preview));
+  };
+
+  // Load user
   useEffect(() => {
-    const loggedUserId = localStorage.getItem('loggedUserId');
-    if (!loggedUserId) {
-      toast({
-        title: 'Acesso negado',
-        description: 'Você precisa estar logado para acessar esta página.',
-        variant: 'destructive',
-      });
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (!token || !user) {
+      toast.error('Você precisa estar logado para acessar esta página.');
       navigate('/login');
       return;
     }
 
-  const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (!user || user.type !== 'locador' || user.type !== 'admin') {
-      toast({
-        title: 'Acesso negado',
-        description: 'Apenas locadores podem acessar esta página.',
-        variant: 'destructive',
-      });
+    if (user.type !== 'locador' && user.type !== 'admin') {
+      toast.error('Apenas locadores podem acessar esta página.');
       navigate('/');
       return;
     }
 
-    const landlord = landlords.find(l => l.userId === loggedUserId);
-    if (!landlord) {
-      toast({
-        title: 'Cadastro incompleto',
-        description: 'Complete seu cadastro de locador para continuar.',
-        variant: 'destructive',
-      });
-      navigate('/landlord');
-      return;
-    }
+    setCurrentUser(user);
+  }, [navigate]);
 
-    if (!landlord.validated || landlord.bankAccounts.length === 0 || !landlord.bankAccounts.some(b => b.validated)) {
-      toast({
-        title: 'Conta não validada',
-        description: 'Você precisa ter uma conta bancária validada para gerenciar imóveis.',
-        variant: 'destructive',
-      });
-      navigate('/landlord/bank-account');
-      return;
-    }
+  useEffect(() => {
+    if (currentUser) fetchProperties();
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    setCurrentLandlord(landlord);
-  }, [navigate, toast]);
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/properties', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error();
+      const all: Property[] = await res.json();
+      // Normalize availability to lowercase
+      const normalized = all.map(p => ({ ...p, availability: p.availability.toLowerCase() }));
+      // Locadores só veem seus próprios imóveis
+      setProperties(
+        currentUser?.type === 'locador'
+          ? normalized.filter(p => p.landlordId === currentUser.id)
+          : normalized
+      );
+    } catch {
+      toast.error('Erro ao carregar imóveis');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProperties = useMemo(() => {
-    return propertiesList.filter(property => {
-      const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.neighborhood.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesAvailability = availabilityFilter === 'all' || property.availability === availabilityFilter;
-      
-      // Filter by current landlord
-      const matchesLandlord = currentLandlord ? property.landlordId === currentLandlord.id : true;
-      
-      return matchesSearch && matchesAvailability && matchesLandlord;
+    return properties.filter(p => {
+      const matchesSearch =
+        !appliedSearch ||
+        p.name.toLowerCase().includes(appliedSearch.toLowerCase()) ||
+        p.address.toLowerCase().includes(appliedSearch.toLowerCase()) ||
+        p.neighborhood.toLowerCase().includes(appliedSearch.toLowerCase());
+      const matchesAvailability = availabilityFilter === 'all' || p.availability === availabilityFilter;
+      return matchesSearch && matchesAvailability;
     });
-  }, [propertiesList, searchTerm, availabilityFilter, currentLandlord]);
+  }, [properties, appliedSearch, availabilityFilter]);
+
+  const resetForm = () => {
+    revokePendingPreviews(pendingFiles);
+    setPendingFiles([]);
+    setUrlInput('');
+    setAmenityInput('');
+    setFormData({
+      name: '', address: '', neighborhood: '', city: '',
+      price: '', bedrooms: '', bathrooms: '', area: '', description: '',
+      amenities: [], bankAccountId: '', images: [],
+    });
+    setEditingProperty(null);
+  };
 
   const handleOpenDialog = (property?: Property) => {
+    revokePendingPreviews(pendingFiles);
+    setPendingFiles([]);
+    setUrlInput('');
+    setAmenityInput('');
     if (property) {
       setEditingProperty(property);
       setFormData({
@@ -152,100 +227,148 @@ const MyProperties = () => {
         bathrooms: property.bathrooms.toString(),
         area: property.area.toString(),
         description: property.description,
-        amenities: property.amenities.join(', '),
-        bankAccountId: property.bankAccountId || '',
+        amenities: property.amenities ?? [],
+        bankAccountId: property.bankAccountId ?? '',
+        images: property.images ?? [],
       });
-      setUploadedImages(property.images);
     } else {
-      setEditingProperty(null);
       setFormData({
-        name: '',
-        address: '',
-        neighborhood: '',
-        city: '',
-        price: '',
-        bedrooms: '',
-        bathrooms: '',
-        area: '',
-        description: '',
-        amenities: '',
-        bankAccountId: currentLandlord?.bankAccounts[0]?.id || '',
+        name: '', address: '', neighborhood: '', city: '',
+        price: '', bedrooms: '', bathrooms: '', area: '', description: '',
+        amenities: [], bankAccountId: '', images: [],
       });
-      setUploadedImages([]);
+      setEditingProperty(null);
     }
     setIsDialogOpen(true);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      // Simular upload - em produção, faria upload para storage
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            setUploadedImages(prev => [...prev, e.target!.result as string]);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = () => {
-    if (!currentLandlord) return;
-
-    const newProperty: Property = {
-      id: editingProperty?.id || Date.now().toString(),
-      landlordId: currentLandlord.id,
-      bankAccountId: formData.bankAccountId,
-      name: formData.name,
-      address: formData.address,
-      neighborhood: formData.neighborhood,
-      city: formData.city,
-      price: parseFloat(formData.price),
-      bedrooms: parseInt(formData.bedrooms),
-      bathrooms: parseInt(formData.bathrooms),
-      area: parseFloat(formData.area),
-      rating: editingProperty?.rating || 0,
-      reviews: editingProperty?.reviews || 0,
-      createdAt: editingProperty?.createdAt || new Date().toISOString().split('T')[0],
-      description: formData.description,
-      amenities: formData.amenities.split(',').map(a => a.trim()).filter(Boolean),
-      images: uploadedImages.length > 0 ? uploadedImages : [
-        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800'
-      ],
-      coordinates: { lat: -23.5505, lng: -46.6333 },
-      availability: editingProperty?.availability || 'available',
-    };
-
-    if (editingProperty) {
-      setPropertiesList(prev => prev.map(p => p.id === editingProperty.id ? newProperty : p));
-      toast({ title: 'Imóvel atualizado com sucesso!' });
-    } else {
-      setPropertiesList(prev => [...prev, newProperty]);
-      toast({ title: 'Imóvel cadastrado com sucesso!' });
-    }
-
-    setIsDialogOpen(false);
-  };
-
-  const handleDelete = (id: string) => {
-    const property = propertiesList.find(p => p.id === id);
-    if (property?.availability === 'rented') {
-      toast({
-        title: 'Não é possível excluir',
-        description: 'Este imóvel possui um contrato ativo.',
-        variant: 'destructive',
-      });
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (totalImages >= MAX_IMAGES) {
+      toast.error(`Máximo de ${MAX_IMAGES} imagens por imóvel`);
       return;
     }
-    setPropertiesList(prev => prev.filter(p => p.id !== id));
-    toast({ title: 'Imóvel removido com sucesso!' });
+    const preview = URL.createObjectURL(file);
+    setPendingFiles((prev) => [...prev, { file, preview }]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleAddUrl = () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    if (totalImages >= MAX_IMAGES) {
+      toast.error(`Máximo de ${MAX_IMAGES} imagens por imóvel`);
+      return;
+    }
+    setFormData((prev) => ({ ...prev, images: [...prev.images, url] }));
+    setUrlInput('');
+  };
+
+  const handleRemoveSavedImage = (index: number) => {
+    setFormData((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
+
+  const handleRemovePendingFile = (index: number) => {
+    setPendingFiles((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+
+      let uploadedUrls: string[] = [];
+      if (pendingFiles.length > 0) {
+        uploadedUrls = await Promise.all(
+          pendingFiles.map(async ({ file }) => {
+            const body = new FormData();
+            body.append('file', file);
+            const res = await fetch('http://localhost:5000/api/upload', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+              body,
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.message || 'Erro ao fazer upload');
+            }
+            const { url } = await res.json();
+            return url as string;
+          })
+        );
+      }
+
+      const payload = {
+        name: formData.name,
+        address: formData.address,
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        price: Number(formData.price),
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        area: Number(formData.area),
+        description: formData.description,
+        images: [...formData.images, ...uploadedUrls],
+        amenities: formData.amenities,
+        rating: editingProperty?.rating ?? 0,
+        reviews: editingProperty?.reviews ?? 0,
+        createdAt: editingProperty?.createdAt ?? new Date().toISOString(),
+        lat: editingProperty?.lat ?? -23.5505,
+        lng: editingProperty?.lng ?? -46.6333,
+        landlordId: currentUser?.type === 'locador'
+          ? currentUser.id
+          : (editingProperty?.landlordId ?? null),
+        bankAccountId: formData.bankAccountId.trim() || null,
+        availability: editingProperty?.availability ?? 'available',
+      };
+
+      if (editingProperty) {
+        const res = await fetch(`http://localhost:5000/api/properties/${editingProperty.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error();
+        toast.success('Imóvel atualizado com sucesso!');
+      } else {
+        const res = await fetch('http://localhost:5000/api/properties', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error();
+        toast.success('Imóvel cadastrado com sucesso!');
+      }
+
+      await fetchProperties();
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao salvar imóvel');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Imóvel removido com sucesso!');
+      await fetchProperties();
+    } catch {
+      toast.error('Erro ao remover imóvel');
+    }
   };
 
   const handleViewHistory = (property: Property) => {
@@ -261,9 +384,7 @@ const MyProperties = () => {
   const handleViewContracts = (property: Property) => {
     setSelectedProperty(property);
     const contracts = getPropertyContracts(property.id);
-    if (contracts.length > 0) {
-      setSelectedContract(contracts[0]);
-    }
+    if (contracts.length > 0) setSelectedContract(contracts[0]);
     setIsContractDialogOpen(true);
   };
 
@@ -272,14 +393,16 @@ const MyProperties = () => {
     setIsInspectionsDialogOpen(true);
   };
 
-  const getAvailabilityBadge = (availability: Property['availability']) => {
-    switch (availability) {
+  const getAvailabilityBadge = (availability: string) => {
+    switch (availability.toLowerCase()) {
       case 'available':
         return <Badge className="bg-green-500/10 text-green-600 border-green-500/20"><CheckCircle className="w-3 h-3 mr-1" /> Disponível</Badge>;
       case 'rented':
         return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Alugado</Badge>;
       case 'maintenance':
         return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><XCircle className="w-3 h-3 mr-1" /> Manutenção</Badge>;
+      default:
+        return <Badge variant="outline">{availability}</Badge>;
     }
   };
 
@@ -296,27 +419,13 @@ const MyProperties = () => {
 
   const formatSignatureDate = (contract: RentalContract) => {
     const signedDate = getContractSignedDate(contract);
-    if (signedDate) {
-      return new Date(signedDate).toLocaleDateString('pt-BR');
-    }
-    return 'Não assinado';
+    return signedDate ? new Date(signedDate).toLocaleDateString('pt-BR') : 'Não assinado';
   };
 
-  if (!currentLandlord) {
-    return null;
-  }
-
-  const goToProperty = (propertyId: string) => {
-    navigate(`/property/${propertyId}`);
-  };
-
-  // Get rental history for a property
-  const getPropertyRentalHistory = (propertyId: string) => {
-    return getPropertyContracts(propertyId);
-  };
+  if (!currentUser) return null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">    
+    <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1 container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -343,8 +452,19 @@ const MyProperties = () => {
                 placeholder="Buscar por nome, endereço ou bairro..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                className="pl-10 pr-24"
               />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {(searchTerm || appliedSearch) && (
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleClearSearch}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+                <Button size="sm" onClick={handleSearch} className="h-8">
+                  Buscar
+                </Button>
+              </div>
             </div>
             <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
               <SelectTrigger className="w-full md:w-48">
@@ -360,167 +480,175 @@ const MyProperties = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-primary" />
+          {!loading && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{filteredProperties.length}</p>
+                    <p className="text-sm text-muted-foreground">Total de Imóveis</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{filteredProperties.length}</p>
-                  <p className="text-sm text-muted-foreground">Total de Imóveis</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{filteredProperties.filter(p => p.availability === 'available').length}</p>
+                    <p className="text-sm text-muted-foreground">Disponíveis</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{filteredProperties.filter(p => p.availability === 'rented').length}</p>
+                    <p className="text-sm text-muted-foreground">Alugados</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      R$ {filteredProperties.filter(p => p.availability === 'rented').reduce((sum, p) => sum + p.price, 0).toLocaleString('pt-BR')}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Receita Mensal</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{filteredProperties.filter(p => p.availability === 'available').length}</p>
-                  <p className="text-sm text-muted-foreground">Disponíveis</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{filteredProperties.filter(p => p.availability === 'rented').length}</p>
-                  <p className="text-sm text-muted-foreground">Alugados</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    R$ {filteredProperties.filter(p => p.availability === 'rented').reduce((sum, p) => sum + p.price, 0).toLocaleString('pt-BR')}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Receita Mensal</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Properties Table */}
-          <div className="rounded-xl bg-card border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Imóvel</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Contratos</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProperties.map((property) => (
-                  <TableRow key={property.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={property.images[0]}
-                          alt={property.name}
-                          onClick={() => goToProperty(property!.id)}
-                          className="w-12 h-12 rounded-lg object-cover cursor-pointer hover:scale-105 transition-transform"
-                        />
-                        <div>
-                          <p className="font-medium">{property.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {property.bedrooms} quartos • {property.area}m²
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-sm">{property.neighborhood}, {property.city}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold">R$ {property.price.toLocaleString('pt-BR')}</span>
-                      <span className="text-muted-foreground text-sm">/mês</span>
-                    </TableCell>
-                    <TableCell>{getAvailabilityBadge(property.availability)}</TableCell>
-                    <TableCell>
-                      <span className="text-sm">{getPropertyContracts(property.id).length} contrato(s)</span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/property/${property.id}`)}
-                          title="Visualizar"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewHistory(property)}
-                          title="Histórico de Locações"
-                        >
-                          <History className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewContracts(property)}
-                          title="Contratos"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewInspections(property)}
-                          title="Vistorias"
-                        >
-                          <ClipboardCheck className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(property)}
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(property.id)}
-                          disabled={property.availability === 'rented'}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">Carregando imóveis...</div>
+          ) : (
+            <div className="rounded-xl bg-card border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Imóvel</TableHead>
+                    <TableHead>Localização</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Contratos</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredProperties.map((property) => (
+                    <TableRow key={property.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {property.images[0] ? (
+                            <img
+                              src={property.images[0]}
+                              alt={property.name}
+                              onClick={() => navigate(`/property/${property.id}`)}
+                              className="w-12 h-12 rounded-lg object-cover cursor-pointer hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                              Sem foto
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium">{property.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {property.bedrooms} quartos • {property.area}m²
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-sm">{property.neighborhood}, {property.city}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-semibold">R$ {property.price.toLocaleString('pt-BR')}</span>
+                        <span className="text-muted-foreground text-sm">/mês</span>
+                      </TableCell>
+                      <TableCell>{getAvailabilityBadge(property.availability)}</TableCell>
+                      <TableCell>
+                        <span className="text-sm">{getPropertyContracts(property.id).length} contrato(s)</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/property/${property.id}`)} title="Visualizar">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleViewHistory(property)} title="Histórico de Locações">
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleViewContracts(property)} title="Contratos">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleViewInspections(property)} title="Vistorias">
+                            <ClipboardCheck className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(property)} title="Editar">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeletingPropertyId(property.id)} title="Excluir">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </motion.div>
       </main>
 
-      {/* Property Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={!!deletingPropertyId}
+        onOpenChange={(open) => { if (!open) setDeletingPropertyId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir imóvel</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este imóvel? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (deletingPropertyId) handleDelete(deletingPropertyId); setDeletingPropertyId(null); }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Property Form Dialog */}
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) { revokePendingPreviews(pendingFiles); setPendingFiles([]); }
+          setIsDialogOpen(open);
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProperty ? 'Editar Imóvel' : 'Novo Imóvel'}</DialogTitle>
@@ -529,176 +657,216 @@ const MyProperties = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            {/* Image Upload */}
-            <div className="space-y-2">
-              <Label>Imagens do Imóvel</Label>
-              <div className="border-2 border-dashed border-border rounded-lg p-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="flex flex-col items-center justify-center cursor-pointer py-4"
-                >
-                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                  <span className="text-sm text-muted-foreground">Clique ou arraste imagens aqui</span>
-                </label>
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mt-4">
-                    {uploadedImages.map((img, index) => (
-                      <div key={index} className="relative">
-                        <img src={img} alt="" className="w-full h-20 object-cover rounded" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+
+              <div>
+                <Label htmlFor="name">Nome do Imóvel</Label>
+                <Input id="name" value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Casa Vista Mar" required />
+              </div>
+
+              <div>
+                <Label htmlFor="price">Valor Mensal (R$)</Label>
+                <Input id="price" type="number" value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="Ex: 4500" required />
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="address">Endereço</Label>
+                <Input id="address" value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Ex: Rua das Palmeiras, 120" required />
+              </div>
+
+              <div>
+                <Label htmlFor="neighborhood">Bairro</Label>
+                <Input id="neighborhood" value={formData.neighborhood}
+                  onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                  placeholder="Ex: Copacabana" required />
+              </div>
+
+              <div>
+                <Label htmlFor="city">Cidade</Label>
+                <Input id="city" value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Ex: Rio de Janeiro" required />
+              </div>
+
+              <div className="col-span-2">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="bedrooms">Quartos</Label>
+                    <Input id="bedrooms" type="number" value={formData.bedrooms}
+                      onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="bathrooms">Banheiros</Label>
+                    <Input id="bathrooms" type="number" value={formData.bathrooms}
+                      onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="area">Área (m²)</Label>
+                    <Input id="area" type="number" value={formData.area}
+                      onChange={(e) => setFormData({ ...formData, area: e.target.value })} required />
+                  </div>
+                </div>
+              </div>
+
+              {/* Gerenciador de imagens */}
+              <div className="col-span-2 space-y-3">
+                <Label>
+                  Imagens{' '}
+                  <span className="text-muted-foreground font-normal">
+                    ({totalImages}/{MAX_IMAGES})
+                  </span>
+                </Label>
+
+                {totalImages > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.images.map((url, i) => (
+                      <div key={`saved-${i}`} className="relative group">
+                        <img src={url} alt="" className="w-20 h-16 object-cover rounded border border-border" />
+                        {i === 0 && pendingFiles.length === 0 && (
+                          <span className="absolute bottom-0 left-0 right-0 text-[10px] text-center bg-black/60 text-white rounded-b">
+                            Principal
+                          </span>
+                        )}
                         <button
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                          type="button"
+                          onClick={() => handleRemoveSavedImage(i)}
+                          className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <XCircle className="h-4 w-4" />
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {pendingFiles.map((pf, i) => (
+                      <div key={`pending-${i}`} className="relative group">
+                        <img src={pf.preview} alt="" className="w-20 h-16 object-cover rounded border border-dashed border-primary/50" />
+                        {formData.images.length === 0 && i === 0 && (
+                          <span className="absolute bottom-0 left-0 right-0 text-[10px] text-center bg-black/60 text-white rounded-b">
+                            Principal
+                          </span>
+                        )}
+                        <span className="absolute top-0 left-0 text-[10px] bg-primary/80 text-primary-foreground px-1 rounded-br">
+                          Pendente
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePendingFile(i)}
+                          className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome do Imóvel</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ex: Casa Vista Mar"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Valor Mensal (R$)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="Ex: 4500"
-                />
-              </div>
-            </div>
+                {totalImages < MAX_IMAGES && (
+                  <div className="flex gap-2 items-center p-3 rounded-lg border border-dashed border-border bg-muted/30">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="shrink-0">
+                      <Upload className="w-4 h-4 mr-1" />
+                      Selecionar
+                    </Button>
+                    <span className="text-muted-foreground text-sm shrink-0">ou</span>
+                    <Input
+                      placeholder="Cole a URL da imagem..."
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddUrl(); } }}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddUrl} disabled={!urlInput.trim()} className="shrink-0">
+                      <ImagePlus className="w-4 h-4 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
+                )}
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Ex: Rua das Palmeiras, 120"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="neighborhood">Bairro</Label>
-                <Input
-                  id="neighborhood"
-                  value={formData.neighborhood}
-                  onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                  placeholder="Ex: Copacabana"
-                />
+                <p className="text-xs text-muted-foreground">
+                  A primeira imagem será a capa. Formatos: JPG, PNG, WEBP, GIF (máx. 5MB). Os arquivos selecionados serão enviados ao salvar.
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">Cidade</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder="Ex: Rio de Janeiro"
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bedrooms">Quartos</Label>
-                <Input
-                  id="bedrooms"
-                  type="number"
-                  value={formData.bedrooms}
-                  onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
-                />
+              <div className="col-span-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea id="description" value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Descreva o imóvel..."
+                  rows={3} required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bathrooms">Banheiros</Label>
-                <Input
-                  id="bathrooms"
-                  type="number"
-                  value={formData.bathrooms}
-                  onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="area">Área (m²)</Label>
-                <Input
-                  id="area"
-                  type="number"
-                  value={formData.area}
-                  onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descreva o imóvel..."
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="amenities">Comodidades (separadas por vírgula)</Label>
-              <Input
-                id="amenities"
-                value={formData.amenities}
-                onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
-                placeholder="Ex: Piscina, Churrasqueira, Garagem"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bankAccount">Conta Bancária para Repasse</Label>
-              <Select
-                value={formData.bankAccountId}
-                onValueChange={(value) => setFormData({ ...formData, bankAccountId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a conta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currentLandlord.bankAccounts.filter(b => b.validated).map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.bank} - Ag: {account.agency} | CC: {account.account}
-                    </SelectItem>
+              <div className="col-span-2">
+                <Label>Comodidades</Label>
+                <div
+                  className="min-h-10 flex flex-wrap gap-1.5 items-center rounded-md border border-input bg-background px-3 py-2 cursor-text"
+                  onClick={() => document.getElementById('amenity-input')?.focus()}
+                >
+                  {formData.amenities.map((amenity, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 text-sm font-medium"
+                    >
+                      {amenity}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData(prev => ({ ...prev, amenities: prev.amenities.filter((_, idx) => idx !== i) }));
+                        }}
+                        className="rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                  <input
+                    id="amenity-input"
+                    value={amenityInput}
+                    onChange={(e) => setAmenityInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.key === 'Enter' || e.key === ',') && amenityInput.trim()) {
+                        e.preventDefault();
+                        const value = amenityInput.trim().replace(/,$/, '');
+                        if (value && !formData.amenities.includes(value)) {
+                          setFormData(prev => ({ ...prev, amenities: [...prev.amenities, value] }));
+                        }
+                        setAmenityInput('');
+                      } else if (e.key === 'Backspace' && !amenityInput && formData.amenities.length > 0) {
+                        setFormData(prev => ({ ...prev, amenities: prev.amenities.slice(0, -1) }));
+                      }
+                    }}
+                    placeholder={formData.amenities.length === 0 ? 'Ex: Piscina, Churrasqueira...' : ''}
+                    className="flex-1 min-w-[120px] bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Pressione Enter ou vírgula para adicionar</p>
+              </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit}>
-              {editingProperty ? 'Salvar Alterações' : 'Cadastrar Imóvel'}
-            </Button>
-          </DialogFooter>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving
+                  ? (pendingFiles.length > 0 ? 'Enviando imagens...' : 'Salvando...')
+                  : editingProperty ? 'Salvar Alterações' : 'Cadastrar Imóvel'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -713,7 +881,7 @@ const MyProperties = () => {
           </DialogHeader>
 
           <div className="py-4">
-            {selectedProperty && getPropertyRentalHistory(selectedProperty.id).length === 0 ? (
+            {selectedProperty && getPropertyContracts(selectedProperty.id).length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Este imóvel ainda não possui histórico de locações.</p>
@@ -728,11 +896,11 @@ const MyProperties = () => {
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Contrato</TableHead>
-                    <TableHead>Inspeção</TableHead>
+                    <TableHead>Vistoria</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedProperty && getPropertyRentalHistory(selectedProperty.id).map((contract) => (
+                  {selectedProperty && getPropertyContracts(selectedProperty.id).map((contract) => (
                     <TableRow key={contract.id}>
                       <TableCell>
                         <div>
@@ -750,23 +918,13 @@ const MyProperties = () => {
                       <TableCell>R$ {contract.monthlyRent.toLocaleString('pt-BR')}</TableCell>
                       <TableCell>{getContractStatusBadge(contract.status)}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewContract(contract)}
-                        >
-                          <FileText className="h-4 w-4 mr-1" />
-                          Ver
+                        <Button variant="ghost" size="sm" onClick={() => handleViewContract(contract)}>
+                          <FileText className="h-4 w-4 mr-1" /> Ver
                         </Button>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => selectedProperty && handleViewInspections(selectedProperty)}
-                        >
-                          <ClipboardCheck className="h-4 w-4 mr-1" />
-                          Ver
+                        <Button variant="ghost" size="sm" onClick={() => selectedProperty && handleViewInspections(selectedProperty)}>
+                          <ClipboardCheck className="h-4 w-4 mr-1" /> Ver
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -789,7 +947,6 @@ const MyProperties = () => {
           </DialogHeader>
 
           <div className="py-4">
-            {/* Contract Info */}
             <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-secondary/30 rounded-lg">
               <div>
                 <p className="text-sm text-muted-foreground">Locatário</p>
@@ -804,7 +961,8 @@ const MyProperties = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Período</p>
                 <p className="font-medium">
-                  {selectedContract?.startDate && new Date(selectedContract.startDate).toLocaleDateString('pt-BR')} - {selectedContract?.endDate && new Date(selectedContract.endDate).toLocaleDateString('pt-BR')}
+                  {selectedContract?.startDate && new Date(selectedContract.startDate).toLocaleDateString('pt-BR')} -{' '}
+                  {selectedContract?.endDate && new Date(selectedContract.endDate).toLocaleDateString('pt-BR')}
                 </p>
               </div>
               <div>
@@ -813,7 +971,6 @@ const MyProperties = () => {
               </div>
             </div>
 
-            {/* Signatures Info */}
             {selectedContract && (
               <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-primary/5 rounded-lg">
                 <div>
@@ -845,7 +1002,6 @@ const MyProperties = () => {
               </div>
             )}
 
-            {/* Contract Terms */}
             <div className="prose prose-sm max-w-none">
               <pre className="whitespace-pre-wrap font-sans text-sm bg-card p-6 rounded-lg border">
                 {selectedContract?.contractTerms}
@@ -854,23 +1010,18 @@ const MyProperties = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsContractDialogOpen(false)}>
-              Fechar
-            </Button>
-            <Button onClick={() => window.print()}>
-              Imprimir Contrato
-            </Button>
+            <Button variant="outline" onClick={() => setIsContractDialogOpen(false)}>Fechar</Button>
+            <Button onClick={() => window.print()}>Imprimir Contrato</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Inspections Dialog */}
       <Dialog open={isInspectionsDialogOpen} onOpenChange={setIsInspectionsDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Vistorias do Imóvel</DialogTitle>
-            <DialogDescription>
-              {selectedProperty?.name}
-            </DialogDescription>
+            <DialogDescription>{selectedProperty?.name}</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
@@ -907,8 +1058,6 @@ const MyProperties = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-
     </div>
   );
 };

@@ -19,7 +19,6 @@ import LandlordLayout from "./pages/admin/LandlordLayout";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBanners from "./pages/admin/AdminBanners";
-import AdminProperties from "./pages/admin/AdminProperties";
 import AdminUsers from "./pages/admin/AdminUsers";
 import MyProperties from "./pages/landlord/MyProperties";
 import BankAccount from "./pages/landlord/BankAccount";
@@ -83,7 +82,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="banners" element={<AdminBanners />} />
-              <Route path="properties" element={<AdminProperties />} />
+              <Route path="properties" element={<MyProperties />} />
               <Route path="users" element={<AdminUsers />} />
             </Route>
           </Route>
